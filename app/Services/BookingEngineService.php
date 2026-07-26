@@ -149,7 +149,7 @@ class BookingEngineService
 
             // Deduct Pass Unit if applicable
             if ($paymentMethod === 'pass' && $pass) {
-                $pass->decrement('remaining_units', 1);
+                $pass->decrement('remaining_units');
                 if ($pass->remaining_units <= 0) {
                     $pass->update(['status' => 'exhausted']);
                 }
