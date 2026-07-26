@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Tenant;
 use App\Models\SportCategory;
 use App\Models\Court;
@@ -18,16 +19,16 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
         $today = Carbon::today()->toDateString();
 
         $stats = [
-            'bookings_today' => Booking::where('booking_date', '=', $today)->count(),
-            'weekly_revenue' => Booking::where('payment_status', '=', 'paid')
-                ->where('booking_date', '>=', Carbon::today()->subDays(7)->toDateString())
+            'bookings_today' => Booking::where('booking_date', '=', $today, 'and')->count(),
+            'weekly_revenue' => Booking::where('payment_status', '=', 'paid', 'and')
+                ->where('booking_date', '>=', Carbon::today()->subDays(7)->toDateString(), 'and')
                 ->sum('total_amount'),
             'occupancy_rate' => 78,
-            'active_members' => User::where('role', '=', 'customer')->count(),
+            'active_members' => User::where('role', '=', 'customer', 'and')->count(),
         ];
 
         $recentBookings = Booking::with('court.sportCategory')
@@ -42,7 +43,7 @@ class AdminDashboardController extends Controller
 
     public function bookings(Request $request)
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
         
         $statusFilter = $request->query('status', 'all');
         $searchQuery = $request->query('search');
@@ -50,7 +51,7 @@ class AdminDashboardController extends Controller
         $query = Booking::with('court.sportCategory')->orderBy('id', 'desc');
 
         if ($statusFilter !== 'all') {
-            $query->where('status', '=', $statusFilter);
+            $query->where('status', '=', $statusFilter, 'and');
         }
 
         if ($searchQuery) {
@@ -68,8 +69,8 @@ class AdminDashboardController extends Controller
 
     public function courts(Request $request)
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
-        $categories = SportCategory::all();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
+        $categories = SportCategory::all(['*']);
         $courts = Court::with('sportCategory')->get();
 
         return view('admin.courts', compact('tenant', 'categories', 'courts'));
@@ -77,7 +78,7 @@ class AdminDashboardController extends Controller
 
     public function storeCourt(Request $request)
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
 
         $validated = $request->validate([
             'sport_category_id' => ['required', 'integer'],
@@ -108,7 +109,7 @@ class AdminDashboardController extends Controller
     public function markNoShow(Request $request, int $id, BookingEngineService $bookingEngine)
     {
         $booking = Booking::findOrFail($id);
-        $staffUser = auth()->user();
+        $staffUser = Auth::user();
 
         $bookingEngine->markNoShow($booking, $staffUser, $request->input('notes'));
 
@@ -117,9 +118,9 @@ class AdminDashboardController extends Controller
 
     public function pricing(Request $request)
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
-        $courts = Court::all();
-        $categories = SportCategory::all();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
+        $courts = Court::all(['*']);
+        $categories = SportCategory::all(['*']);
         $pricingRules = PricingRule::orderBy('priority', 'asc')->get();
 
         return view('admin.pricing', compact('tenant', 'courts', 'categories', 'pricingRules'));
@@ -127,7 +128,7 @@ class AdminDashboardController extends Controller
 
     public function storePricingRule(Request $request)
     {
-        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],

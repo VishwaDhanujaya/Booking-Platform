@@ -140,7 +140,7 @@
     </div>
 
     <!-- Create Pricing Rule Modal -->
-    <div id="addRuleModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div id="addRuleModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h3 class="text-lg font-extrabold text-slate-900">Create Pricing Rule</h3>

@@ -50,21 +50,21 @@ class BookingEngineService
         // 3. Perform Concurrency Safe Atomic Booking Creation
         return DB::transaction(function () use ($user, $court, $date, $startTime, $endTime, $addons, $paymentMethod, $pass) {
             // Lock target slots for update
-            $slots = TimeSlot::where('court_id', $court->id)
-                ->where('date', $date)
-                ->where('start_time', '>=', $startTime)
-                ->where('end_time', '<=', $endTime)
+            $slots = TimeSlot::where('court_id', '=', $court->id, 'and')
+                ->where('date', '=', $date, 'and')
+                ->where('start_time', '>=', $startTime, 'and')
+                ->where('end_time', '<=', $endTime, 'and')
                 ->lockForUpdate()
                 ->get();
 
             // Check existing confirmed bookings overlapping this slot range
-            $existingBookingsCount = Booking::where('court_id', $court->id)
-                ->where('booking_date', $date)
-                ->whereIn('status', ['confirmed', 'pending', 'payment_pending'])
+            $existingBookingsCount = Booking::where('court_id', '=', $court->id, 'and')
+                ->where('booking_date', '=', $date, 'and')
+                ->whereIn('status', ['confirmed', 'pending', 'payment_pending'], 'and')
                 ->where(function ($q) use ($startTime, $endTime) {
                     $q->where(function ($sub) use ($startTime, $endTime) {
-                        $sub->where('start_time', '<', $endTime)
-                            ->where('end_time', '>', $startTime);
+                        $sub->where('start_time', '<', $endTime, 'and')
+                            ->where('end_time', '>', $startTime, 'and');
                     });
                 })
                 ->lockForUpdate()
@@ -149,7 +149,7 @@ class BookingEngineService
 
             // Deduct Pass Unit if applicable
             if ($paymentMethod === 'pass' && $pass) {
-                $pass->decrement('remaining_units');
+                $pass->decrement('remaining_units', 1);
                 if ($pass->remaining_units <= 0) {
                     $pass->update(['status' => 'exhausted']);
                 }
@@ -182,9 +182,9 @@ class BookingEngineService
         $targetDate = Carbon::parse($date);
 
         // Daily Limit: Max 2 bookings/day
-        $dailyCount = Booking::where('user_id', $user->id)
-            ->where('booking_date', $date)
-            ->whereIn('status', ['confirmed', 'pending', 'payment_pending'])
+        $dailyCount = Booking::where('user_id', '=', $user->id, 'and')
+            ->where('booking_date', '=', $date, 'and')
+            ->whereIn('status', ['confirmed', 'pending', 'payment_pending'], 'and')
             ->count();
 
         if ($dailyCount >= 2) {
@@ -195,9 +195,9 @@ class BookingEngineService
         $weekStart = $targetDate->copy()->startOfWeek()->toDateString();
         $weekEnd = $targetDate->copy()->endOfWeek()->toDateString();
 
-        $weeklyCount = Booking::where('user_id', $user->id)
-            ->whereBetween('booking_date', [$weekStart, $weekEnd])
-            ->whereIn('status', ['confirmed', 'pending', 'payment_pending'])
+        $weeklyCount = Booking::where('user_id', '=', $user->id, 'and')
+            ->whereBetween('booking_date', [$weekStart, $weekEnd], 'and')
+            ->whereIn('status', ['confirmed', 'pending', 'payment_pending'], 'and')
             ->count();
 
         if ($weeklyCount >= 6) {
@@ -242,10 +242,10 @@ class BookingEngineService
             $booking->save();
 
             // Free up time slots
-            TimeSlot::where('court_id', $booking->court_id)
-                ->where('date', $booking->booking_date)
-                ->where('start_time', '>=', $booking->start_time)
-                ->where('end_time', '<=', $booking->end_time)
+            TimeSlot::where('court_id', '=', $booking->court_id, 'and')
+                ->where('date', '=', $booking->booking_date, 'and')
+                ->where('start_time', '>=', $booking->start_time, 'and')
+                ->where('end_time', '<=', $booking->end_time, 'and')
                 ->update(['status' => 'available', 'booked_by_name' => null]);
 
             // Auto-promote waitlisted customer
@@ -258,12 +258,12 @@ class BookingEngineService
      */
     protected function promoteWaitlistedCustomer(int $courtId, string $date, string $startTime, string $endTime): void
     {
-        $nextInLine = Waitlist::where('court_id', $courtId)
-            ->where('date', $date)
-            ->where('start_time', $startTime)
-            ->where('status', 'waiting')
+        $nextInLine = Waitlist::where('court_id', '=', $courtId, 'and')
+            ->where('date', '=', $date, 'and')
+            ->where('start_time', '=', $startTime, 'and')
+            ->where('status', '=', 'waiting', 'and')
             ->orderBy('position', 'asc')
-            ->first();
+            ->first(['*']);
 
         if ($nextInLine) {
             $nextInLine->status = 'notified';
@@ -298,10 +298,10 @@ class BookingEngineService
 
             // Check auto-ban threshold (3 no-shows within 30 days)
             if ($booking->user_id) {
-                $customer = User::find($booking->user_id);
+                $customer = User::find($booking->user_id, ['*']);
                 if ($customer && !$customer->is_banned) {
-                    $recentNoShows = NoShowRecord::where('user_id', $customer->id)
-                        ->where('occurred_at', '>=', Carbon::now()->subDays(30))
+                    $recentNoShows = NoShowRecord::where('user_id', '=', $customer->id, 'and')
+                        ->where('occurred_at', '>=', Carbon::now()->subDays(30), 'and')
                         ->count();
 
                     if ($recentNoShows >= 3) {
@@ -325,9 +325,9 @@ class BookingEngineService
      */
     public function joinWaitlist(User $user, Court $court, string $date, string $startTime, string $endTime): Waitlist
     {
-        $lastPosition = Waitlist::where('court_id', $court->id)
-            ->where('date', $date)
-            ->where('start_time', $startTime)
+        $lastPosition = Waitlist::where('court_id', '=', $court->id, 'and')
+            ->where('date', '=', $date, 'and')
+            ->where('start_time', '=', $startTime, 'and')
             ->max('position') ?? 0;
 
         return Waitlist::create([
