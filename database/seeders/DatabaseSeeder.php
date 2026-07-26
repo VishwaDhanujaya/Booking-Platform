@@ -25,15 +25,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Create Tenant
-        $tenant = Tenant::create([
+        // ==========================================
+        // TENANT 1: Colombo Courts Club
+        // ==========================================
+        $t1 = Tenant::create([
             'name' => 'Colombo Courts Club',
             'slug' => 'colombo-courts-club',
-            'domain' => 'colombocourts.local',
+            'domain' => 'colombo.localhost',
             'address' => '45 Maitland Crescent, Colombo 00700, Sri Lanka',
             'phone' => '+94 11 234 5678',
             'email' => 'info@colombocourts.lk',
-            'brand_color' => '#0284c7',
+            'brand_color' => '#0284c7', // Sky Blue
             'logo_url' => '/images/logo.png',
             'theme_settings' => [
                 'primary_color' => '#0284c7',
@@ -45,112 +47,110 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // 2. Create Roles
-        $ownerRole = Role::create([
-            'tenant_id' => $tenant->id,
+        // Tenant 1 Roles
+        $t1OwnerRole = Role::create([
+            'tenant_id' => $t1->id,
             'name' => 'Owner',
             'slug' => 'owner',
             'description' => 'Full administrative control over facility settings, staff, and pricing.',
             'permissions' => ['all' => true],
         ]);
 
-        $managerRole = Role::create([
-            'tenant_id' => $tenant->id,
+        $t1ManagerRole = Role::create([
+            'tenant_id' => $t1->id,
             'name' => 'Manager',
             'slug' => 'manager',
             'description' => 'Operational management of schedules, court bookings, and customer ledgers.',
             'permissions' => ['manage_bookings' => true, 'manage_courts' => true, 'manage_customers' => true],
         ]);
 
-        $staffRole = Role::create([
-            'tenant_id' => $tenant->id,
+        $t1StaffRole = Role::create([
+            'tenant_id' => $t1->id,
             'name' => 'Trainer / Staff',
             'slug' => 'trainer_staff',
             'description' => 'Court coaching schedules and attendance tracking.',
             'permissions' => ['view_bookings' => true, 'mark_attendance' => true],
         ]);
 
-        $frontDeskRole = Role::create([
-            'tenant_id' => $tenant->id,
+        $t1FrontDeskRole = Role::create([
+            'tenant_id' => $t1->id,
             'name' => 'Front Desk',
             'slug' => 'front_desk',
             'description' => 'Check-ins, cash/bank payments, and walk-in reservations.',
             'permissions' => ['create_bookings' => true, 'process_payments' => true],
         ]);
 
-        $customerRole = Role::create([
-            'tenant_id' => $tenant->id,
+        $t1CustomerRole = Role::create([
+            'tenant_id' => $t1->id,
             'name' => 'Customer',
             'slug' => 'customer',
             'description' => 'Public facility user capable of reserving courts and purchasing passes.',
             'permissions' => ['book_courts' => true],
         ]);
 
-        // 3. Create Users
-        $ownerUser = User::create([
-            'tenant_id' => $tenant->id,
+        // Tenant 1 Users
+        $t1Owner = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Aruni Fernando (Owner)',
             'email' => 'admin@colombocourts.lk',
             'phone' => '+94 77 000 1111',
             'password' => Hash::make('password'),
             'role' => 'owner',
         ]);
-        $ownerUser->roles()->attach($ownerRole);
+        $t1Owner->roles()->attach($t1OwnerRole);
 
-        $managerUser = User::create([
-            'tenant_id' => $tenant->id,
+        $t1Manager = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Dinesh Wickramasinghe',
             'email' => 'manager@colombocourts.lk',
             'phone' => '+94 77 222 3333',
             'password' => Hash::make('password'),
             'role' => 'manager',
         ]);
-        $managerUser->roles()->attach($managerRole);
+        $t1Manager->roles()->attach($t1ManagerRole);
 
-        $staffUser = User::create([
-            'tenant_id' => $tenant->id,
+        $t1Staff = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Coach Ruwan Bandara',
             'email' => 'staff@colombocourts.lk',
             'phone' => '+94 77 444 5555',
             'password' => Hash::make('password'),
             'role' => 'trainer_staff',
         ]);
-        $staffUser->roles()->attach($staffRole);
+        $t1Staff->roles()->attach($t1StaffRole);
 
-        $frontDeskUser = User::create([
-            'tenant_id' => $tenant->id,
+        $t1FrontDesk = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Samanthi Silva',
             'email' => 'frontdesk@colombocourts.lk',
             'phone' => '+94 77 666 7777',
             'password' => Hash::make('password'),
             'role' => 'front_desk',
         ]);
-        $frontDeskUser->roles()->attach($frontDeskRole);
+        $t1FrontDesk->roles()->attach($t1FrontDeskRole);
 
-        // Customers
-        $customerKavinda = User::create([
-            'tenant_id' => $tenant->id,
+        $t1Kavinda = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Kavinda Perera',
             'email' => 'kavinda@example.com',
             'phone' => '+94 77 123 4567',
             'password' => Hash::make('password'),
             'role' => 'customer',
         ]);
-        $customerKavinda->roles()->attach($customerRole);
+        $t1Kavinda->roles()->attach($t1CustomerRole);
 
-        $customerNizal = User::create([
-            'tenant_id' => $tenant->id,
+        $t1Nizal = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Nizal Shanaka',
             'email' => 'nizal@example.com',
             'phone' => '+94 71 987 6543',
             'password' => Hash::make('password'),
             'role' => 'customer',
         ]);
-        $customerNizal->roles()->attach($customerRole);
+        $t1Nizal->roles()->attach($t1CustomerRole);
 
-        // Banned Customer
-        $customerBanned = User::create([
-            'tenant_id' => $tenant->id,
+        $t1Banned = User::create([
+            'tenant_id' => $t1->id,
             'name' => 'Kasun Jayawardena',
             'email' => 'kasun.banned@example.com',
             'phone' => '+94 70 111 2233',
@@ -160,46 +160,46 @@ class DatabaseSeeder extends Seeder
             'banned_until' => Carbon::now()->addDays(30),
             'ban_reason' => 'Account automatically suspended due to 3 unexcused no-shows within 30 days.',
         ]);
-        $customerBanned->roles()->attach($customerRole);
+        $t1Banned->roles()->attach($t1CustomerRole);
 
-        // 4. Sport Categories
-        $tennis = SportCategory::create([
-            'tenant_id' => $tenant->id,
+        // Tenant 1 Sport Categories
+        $t1Tennis = SportCategory::create([
+            'tenant_id' => $t1->id,
             'name' => 'Tennis',
             'slug' => 'tennis',
             'icon_type' => 'tennis',
             'description' => 'Championship acrylic hard courts with high-performance LED floodlighting.',
         ]);
 
-        $padel = SportCategory::create([
-            'tenant_id' => $tenant->id,
+        $t1Padel = SportCategory::create([
+            'tenant_id' => $t1->id,
             'name' => 'Padel',
             'slug' => 'padel',
             'icon_type' => 'padel',
             'description' => 'International FIP standard glass-walled enclosed padel courts.',
         ]);
 
-        $badminton = SportCategory::create([
-            'tenant_id' => $tenant->id,
+        $t1Badminton = SportCategory::create([
+            'tenant_id' => $t1->id,
             'name' => 'Badminton',
             'slug' => 'badminton',
             'icon_type' => 'badminton',
             'description' => 'Air-conditioned indoor halls with BWF-certified PVC mats.',
         ]);
 
-        $squash = SportCategory::create([
-            'tenant_id' => $tenant->id,
+        $t1Squash = SportCategory::create([
+            'tenant_id' => $t1->id,
             'name' => 'Squash',
             'slug' => 'squash',
             'icon_type' => 'squash',
             'description' => 'World Squash Federation approved glass-backed courts with maple floors.',
         ]);
 
-        // 5. Courts / Resources
-        $courtsData = [
-            [
-                'tenant_id' => $tenant->id,
-                'sport_category_id' => $tennis->id,
+        // Tenant 1 Courts
+        $t1Courts = [
+            Court::create([
+                'tenant_id' => $t1->id,
+                'sport_category_id' => $t1Tennis->id,
                 'name' => 'Center Court - Tennis 1',
                 'type' => 'outdoor',
                 'surface_type' => 'Plexicushion Hard',
@@ -209,10 +209,10 @@ class DatabaseSeeder extends Seeder
                 'max_capacity' => 1,
                 'image_url' => '/images/courts/tennis.png',
                 'description' => 'Championship center court with spectator seating & night floodlights.',
-            ],
-            [
-                'tenant_id' => $tenant->id,
-                'sport_category_id' => $tennis->id,
+            ]),
+            Court::create([
+                'tenant_id' => $t1->id,
+                'sport_category_id' => $t1Tennis->id,
                 'name' => 'Hard Court - Tennis 2',
                 'type' => 'outdoor',
                 'surface_type' => 'Acrylic Hard Court',
@@ -222,10 +222,10 @@ class DatabaseSeeder extends Seeder
                 'max_capacity' => 1,
                 'image_url' => '/images/courts/tennis.png',
                 'description' => 'Tournament grade hard court with high grip surface.',
-            ],
-            [
-                'tenant_id' => $tenant->id,
-                'sport_category_id' => $padel->id,
+            ]),
+            Court::create([
+                'tenant_id' => $t1->id,
+                'sport_category_id' => $t1Padel->id,
                 'name' => 'Panoramic Glass Padel 1',
                 'type' => 'indoor',
                 'surface_type' => 'Monofilament Turf',
@@ -235,10 +235,10 @@ class DatabaseSeeder extends Seeder
                 'max_capacity' => 1,
                 'image_url' => '/images/courts/padel.png',
                 'description' => 'Full panoramic glass rear wall with tournament blue turf.',
-            ],
-            [
-                'tenant_id' => $tenant->id,
-                'sport_category_id' => $badminton->id,
+            ]),
+            Court::create([
+                'tenant_id' => $t1->id,
+                'sport_category_id' => $t1Badminton->id,
                 'name' => 'AC Badminton Court 1',
                 'type' => 'indoor',
                 'surface_type' => 'BWF Green PVC Mat',
@@ -248,30 +248,12 @@ class DatabaseSeeder extends Seeder
                 'max_capacity' => 1,
                 'image_url' => '/images/courts/badminton.png',
                 'description' => 'Fully air-conditioned hall with anti-glare shadowless lighting.',
-            ],
-            [
-                'tenant_id' => $tenant->id,
-                'sport_category_id' => $squash->id,
-                'name' => 'WSF Glass Court 1',
-                'type' => 'indoor',
-                'surface_type' => 'Sprung Maple',
-                'hourly_rate' => 2800.00,
-                'peak_hourly_rate' => 3600.00,
-                'buffer_time_minutes' => 0,
-                'max_capacity' => 1,
-                'image_url' => '/images/courts/squash.png',
-                'description' => 'World Squash Federation approved hardwood court with glass backwall.',
-            ],
+            ]),
         ];
 
-        $createdCourts = [];
-        foreach ($courtsData as $c) {
-            $createdCourts[] = Court::create($c);
-        }
-
-        // 6. Reusable Add-Ons
-        $addonRacket = AddOn::create([
-            'tenant_id' => $tenant->id,
+        // Tenant 1 Add-ons
+        $t1AddonRacket = AddOn::create([
+            'tenant_id' => $t1->id,
             'name' => 'Pro Racket Rental x 2',
             'category' => 'equipment',
             'description' => 'Pair of Wilson/Head professional rackets.',
@@ -280,8 +262,8 @@ class DatabaseSeeder extends Seeder
             'stock_quantity' => 20,
         ]);
 
-        $addonBalls = AddOn::create([
-            'tenant_id' => $tenant->id,
+        $t1AddonBalls = AddOn::create([
+            'tenant_id' => $t1->id,
             'name' => 'Match Balls Tube (Babolat)',
             'category' => 'equipment',
             'description' => 'New sealed pressure canister of 3 match balls.',
@@ -290,18 +272,8 @@ class DatabaseSeeder extends Seeder
             'stock_quantity' => 50,
         ]);
 
-        $addonLocker = AddOn::create([
-            'tenant_id' => $tenant->id,
-            'name' => 'Locker & Premium Towel Access',
-            'category' => 'facility',
-            'description' => 'Keyed locker storage and clean shower towels.',
-            'price' => 500.00,
-            'pricing_type' => 'per_booking',
-            'stock_quantity' => 30,
-        ]);
-
-        $addonLights = AddOn::create([
-            'tenant_id' => $tenant->id,
+        $t1AddonLights = AddOn::create([
+            'tenant_id' => $t1->id,
             'name' => 'Night LED Floodlights',
             'category' => 'facility',
             'description' => 'High intensity LED lighting surcharge after 18:00.',
@@ -310,148 +282,58 @@ class DatabaseSeeder extends Seeder
             'stock_quantity' => null,
         ]);
 
-        // 7. Pricing Rules
+        // Tenant 1 Pricing Rules
         PricingRule::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => null, // tenant-wide
+            'tenant_id' => $t1->id,
             'name' => 'Evening Peak Surcharge',
             'rule_type' => 'peak',
-            'discount_type' => 'none',
             'adjustment_type' => 'percentage',
-            'adjustment_value' => 25.00, // +25%
+            'adjustment_value' => 25.00,
             'start_time' => '16:00',
             'end_time' => '22:00',
             'days_of_week' => [1, 2, 3, 4, 5],
             'priority' => 1,
         ]);
 
-        PricingRule::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => null,
-            'name' => 'Student & Senior Special',
-            'rule_type' => 'discount',
-            'discount_type' => 'student',
-            'adjustment_type' => 'percentage',
-            'adjustment_value' => -15.00, // -15%
-            'start_time' => '08:00',
-            'end_time' => '16:00',
-            'days_of_week' => [1, 2, 3, 4, 5],
-            'priority' => 2,
-        ]);
-
-        PricingRule::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => null,
-            'name' => 'Multi-Slot Bulk Discount',
-            'rule_type' => 'discount',
-            'discount_type' => 'multi_booking',
-            'adjustment_type' => 'percentage',
-            'adjustment_value' => -10.00, // -10% for 3+ consecutive hours
-            'min_slots' => 3,
-            'priority' => 3,
-        ]);
-
-        // 8. Schedules & One-off Blocked Times
-        foreach ($createdCourts as $court) {
-            Schedule::create([
-                'tenant_id' => $tenant->id,
-                'court_id' => $court->id,
-                'title' => 'Standard Operating Hours',
-                'type' => 'recurring',
-                'day_of_week' => null,
-                'start_time' => '06:00',
-                'end_time' => '22:00',
-                'is_available' => true,
-            ]);
-        }
-
-        // Add a Tournament Block on Center Court for this Saturday
-        $saturdayDate = Carbon::today()->next(Carbon::SATURDAY)->toDateString();
-        Schedule::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => $createdCourts[0]->id,
-            'title' => 'National Junior Tennis Open - Semi Finals',
-            'type' => 'tournament',
-            'specific_date' => $saturdayDate,
-            'start_time' => '09:00',
-            'end_time' => '14:00',
-            'is_available' => false,
-            'notes' => 'Court reserved exclusively for junior championship matches.',
-        ]);
-
-        // 9. Generate Time Slots for 7 Days
+        // Tenant 1 Time Slots (7 days)
         $today = Carbon::today();
-        foreach ($createdCourts as $court) {
+        foreach ($t1Courts as $court) {
             for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
-                $loopDate = $today->copy()->addDays($dayOffset);
-                $dateStr = $loopDate->toDateString();
-
+                $dateStr = $today->copy()->addDays($dayOffset)->toDateString();
                 for ($hour = 6; $hour < 22; $hour++) {
-                    $startTime = sprintf('%02d:00', $hour);
-                    $endTime = sprintf('%02d:00', $hour + 1);
-
-                    // Check if tournament blocked
-                    $isBlocked = ($court->id === $createdCourts[0]->id && $dateStr === $saturdayDate && $hour >= 9 && $hour < 14);
                     $isPeak = ($hour >= 16);
                     $price = $isPeak ? ($court->peak_hourly_rate ?? $court->hourly_rate * 1.25) : $court->hourly_rate;
-
-                    if ($isBlocked) {
-                        $status = 'blocked';
-                        $bookedBy = 'Junior Open Tournament';
-                        $blockReason = 'Tournament Enclosure';
-                    } else {
-                        // Seed realistic pattern: ~30% booked
-                        $randVal = rand(1, 100);
-                        $isBooked = ($isPeak && $randVal <= 60) || (!$isPeak && $randVal <= 20);
-                        $status = $isBooked ? 'booked' : 'available';
-                        $bookedBy = $isBooked ? 'Reserved Slot' : null;
-                        $blockReason = null;
-                    }
+                    $isBooked = ($isPeak && rand(1, 100) <= 50);
 
                     TimeSlot::create([
-                        'tenant_id' => $tenant->id,
+                        'tenant_id' => $t1->id,
                         'court_id' => $court->id,
                         'date' => $dateStr,
-                        'start_time' => $startTime,
-                        'end_time' => $endTime,
-                        'status' => $status,
-                        'block_reason' => $blockReason,
+                        'start_time' => sprintf('%02d:00', $hour),
+                        'end_time' => sprintf('%02d:00', $hour + 1),
+                        'status' => $isBooked ? 'booked' : 'available',
                         'is_peak' => $isPeak,
                         'price' => $price,
-                        'booked_by_name' => $bookedBy,
+                        'booked_by_name' => $isBooked ? 'Reserved Slot' : null,
                     ]);
                 }
             }
         }
 
-        // 10. Credit Ledger & Customer Passes
-        // Top up Kavinda's Wallet
+        // Tenant 1 Credit Ledgers & Passes
         CreditLedger::create([
-            'tenant_id' => $tenant->id,
-            'user_id' => $customerKavinda->id,
+            'tenant_id' => $t1->id,
+            'user_id' => $t1Kavinda->id,
             'amount_in' => 15000.00,
-            'amount_out' => 0.00,
             'balance_after' => 15000.00,
             'reason' => 'Initial Wallet Top Up via Bank Deposit',
             'reference_type' => 'topup',
-            'created_by' => $managerUser->id,
+            'created_by' => $t1Manager->id,
         ]);
 
-        CreditLedger::create([
-            'tenant_id' => $tenant->id,
-            'user_id' => $customerNizal->id,
-            'amount_in' => 5000.00,
-            'amount_out' => 0.00,
-            'balance_after' => 5000.00,
-            'reason' => 'Promotional Sign-up Bonus',
-            'reference_type' => 'adjustment',
-            'created_by' => $ownerUser->id,
-        ]);
-
-        // Customer Pass for Kavinda
-        $kavindaPass = CustomerPass::create([
-            'tenant_id' => $tenant->id,
-            'user_id' => $customerKavinda->id,
+        $t1Pass = CustomerPass::create([
+            'tenant_id' => $t1->id,
+            'user_id' => $t1Kavinda->id,
             'pass_name' => '10-Session Padel & Tennis Pass',
             'total_units' => 10,
             'remaining_units' => 8,
@@ -460,136 +342,205 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        PassLedgerEntry::create([
-            'customer_pass_id' => $kavindaPass->id,
-            'units_in' => 10,
-            'units_out' => 0,
-            'units_after' => 10,
-            'reason' => 'Pass Purchase (CCC-PASS-881)',
-        ]);
-
-        PassLedgerEntry::create([
-            'customer_pass_id' => $kavindaPass->id,
-            'units_in' => 0,
-            'units_out' => 2,
-            'units_after' => 8,
-            'reason' => 'Redeemed 2 Hours on Panoramic Padel Court',
-        ]);
-
-        // 11. No-Show Log Records for Banned User
-        for ($i = 1; $i <= 3; $i++) {
-            $pastBooking = Booking::create([
-                'tenant_id' => $tenant->id,
-                'court_id' => $createdCourts[1]->id,
-                'user_id' => $customerBanned->id,
-                'booking_reference' => 'CCC-2026-NOSHOW-' . $i,
-                'booking_date' => Carbon::today()->subDays($i * 5)->toDateString(),
-                'start_time' => '18:00',
-                'end_time' => '19:00',
-                'customer_name' => $customerBanned->name,
-                'customer_email' => $customerBanned->email,
-                'customer_phone' => $customerBanned->phone,
-                'status' => 'no_show',
-                'payment_status' => 'unpaid',
-                'payment_method' => 'pay_at_venue',
-                'base_amount' => 3500.00,
-                'addons_amount' => 0,
-                'discount_amount' => 0,
-                'tax_amount' => 0,
-                'total_amount' => 3500.00,
-            ]);
-
-            NoShowRecord::create([
-                'tenant_id' => $tenant->id,
-                'user_id' => $customerBanned->id,
-                'booking_id' => $pastBooking->id,
-                'logged_by' => $frontDeskUser->id,
-                'notes' => 'Customer failed to show up without prior 24h cancellation.',
-                'occurred_at' => Carbon::today()->subDays($i * 5)->setHour(19),
-            ]);
-        }
-
-        // 12. Create Real Database Bookings for Kavinda
+        // Tenant 1 Bookings
         $b1 = Booking::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => $createdCourts[0]->id,
-            'user_id' => $customerKavinda->id,
+            'tenant_id' => $t1->id,
+            'court_id' => $t1Courts[0]->id,
+            'user_id' => $t1Kavinda->id,
             'booking_reference' => 'CCC-2026-9812',
             'booking_date' => $today->copy()->addDays(1)->toDateString(),
             'start_time' => '17:00',
             'end_time' => '19:00',
-            'customer_name' => $customerKavinda->name,
-            'customer_email' => $customerKavinda->email,
-            'customer_phone' => $customerKavinda->phone,
+            'customer_name' => $t1Kavinda->name,
+            'customer_email' => $t1Kavinda->email,
+            'customer_phone' => $t1Kavinda->phone,
             'status' => 'confirmed',
             'payment_status' => 'paid',
             'payment_method' => 'credits',
             'base_amount' => 7000.00,
             'addons_amount' => 2200.00,
-            'discount_amount' => 0,
-            'tax_amount' => 0,
             'total_amount' => 9200.00,
-            'price_breakdown' => [
-                'base_rate' => 3500.00,
-                'hours' => 2,
-                'peak_surcharge' => 0,
-                'discount' => 0,
-                'addons_total' => 2200.00
-            ],
         ]);
 
         BookingAddOn::create([
             'booking_id' => $b1->id,
-            'add_on_id' => $addonRacket->id,
-            'name' => $addonRacket->name,
+            'add_on_id' => $t1AddonRacket->id,
+            'name' => $t1AddonRacket->name,
             'quantity' => 1,
             'unit_price' => 1200.00,
             'total_price' => 1200.00,
         ]);
 
-        BookingAddOn::create([
-            'booking_id' => $b1->id,
-            'add_on_id' => $addonLights->id,
-            'name' => $addonLights->name,
-            'quantity' => 1,
-            'unit_price' => 1000.00,
-            'total_price' => 1000.00,
+        // ==========================================
+        // TENANT 2: Apex Sports Arena (Isolation Verification)
+        // ==========================================
+        $t2 = Tenant::create([
+            'name' => 'Apex Sports Arena',
+            'slug' => 'apex-sports-arena',
+            'domain' => 'apex.localhost',
+            'address' => '120 Race Course Promenade, Kandy, Sri Lanka',
+            'phone' => '+94 81 999 8888',
+            'email' => 'info@apexsports.lk',
+            'brand_color' => '#10b981', // Emerald Green
+            'logo_url' => '/images/apex-logo.png',
+            'theme_settings' => [
+                'primary_color' => '#10b981',
+                'accent_color' => '#065f46',
+                'font_family' => 'Outfit, sans-serif'
+            ],
+            'subscription_plan' => 'enterprise',
+            'subscription_status' => 'active',
+            'is_active' => true,
         ]);
 
-        $b2 = Booking::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => $createdCourts[2]->id,
-            'user_id' => $customerKavinda->id,
-            'booking_reference' => 'CCC-2026-4410',
-            'booking_date' => $today->copy()->addDays(3)->toDateString(),
+        // Tenant 2 Roles
+        $t2OwnerRole = Role::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Owner',
+            'slug' => 'owner',
+            'description' => 'Apex Facility Owner',
+            'permissions' => ['all' => true],
+        ]);
+
+        $t2CustomerRole = Role::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Customer',
+            'slug' => 'customer',
+            'description' => 'Apex Arena Member',
+            'permissions' => ['book_courts' => true],
+        ]);
+
+        // Tenant 2 Users
+        $t2Owner = User::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Nalin Wickramasinghe (Apex Owner)',
+            'email' => 'owner@apexsports.lk',
+            'phone' => '+94 81 111 2222',
+            'password' => Hash::make('password'),
+            'role' => 'owner',
+        ]);
+        $t2Owner->roles()->attach($t2OwnerRole);
+
+        $t2Nishan = User::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Nishan Gunaratne',
+            'email' => 'nishan@example.com',
+            'phone' => '+94 77 999 0000',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+        $t2Nishan->roles()->attach($t2CustomerRole);
+
+        // Tenant 2 Sport Categories
+        $t2Badminton = SportCategory::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Badminton',
+            'slug' => 'badminton',
+            'icon_type' => 'badminton',
+            'description' => 'High ceilings, wooden subflooring, and competition green mats.',
+        ]);
+
+        $t2Squash = SportCategory::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Squash',
+            'slug' => 'squash',
+            'icon_type' => 'squash',
+            'description' => 'WSF certified sprung maple wood squash arena.',
+        ]);
+
+        // Tenant 2 Courts
+        $t2Courts = [
+            Court::create([
+                'tenant_id' => $t2->id,
+                'sport_category_id' => $t2Badminton->id,
+                'name' => 'Apex AC Badminton Court 1',
+                'type' => 'indoor',
+                'surface_type' => 'Yonex BWF Mat',
+                'hourly_rate' => 2800.00,
+                'peak_hourly_rate' => 3500.00,
+                'buffer_time_minutes' => 10,
+                'max_capacity' => 1,
+                'image_url' => '/images/courts/badminton.png',
+                'description' => 'Premier AC badminton court with LED shadow-free illumination.',
+            ]),
+            Court::create([
+                'tenant_id' => $t2->id,
+                'sport_category_id' => $t2Squash->id,
+                'name' => 'Apex Championship Squash Court',
+                'type' => 'indoor',
+                'surface_type' => 'Sprung Hard Maple',
+                'hourly_rate' => 3200.00,
+                'peak_hourly_rate' => 4000.00,
+                'buffer_time_minutes' => 15,
+                'max_capacity' => 1,
+                'image_url' => '/images/courts/squash.png',
+                'description' => 'Championship glass-backed court with viewing gallery.',
+            ]),
+        ];
+
+        // Tenant 2 Add-ons
+        $t2AddonRacket = AddOn::create([
+            'tenant_id' => $t2->id,
+            'name' => 'Yonex Carbonex Racket Rental',
+            'category' => 'equipment',
+            'description' => 'Single high-tension Yonex racket.',
+            'price' => 800.00,
+            'pricing_type' => 'per_booking',
+            'stock_quantity' => 15,
+        ]);
+
+        // Tenant 2 Time Slots
+        foreach ($t2Courts as $court) {
+            for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
+                $dateStr = $today->copy()->addDays($dayOffset)->toDateString();
+                for ($hour = 6; $hour < 22; $hour++) {
+                    $isPeak = ($hour >= 17);
+                    $price = $isPeak ? ($court->peak_hourly_rate ?? $court->hourly_rate * 1.2) : $court->hourly_rate;
+                    $isBooked = ($isPeak && rand(1, 100) <= 40);
+
+                    TimeSlot::create([
+                        'tenant_id' => $t2->id,
+                        'court_id' => $court->id,
+                        'date' => $dateStr,
+                        'start_time' => sprintf('%02d:00', $hour),
+                        'end_time' => sprintf('%02d:00', $hour + 1),
+                        'status' => $isBooked ? 'booked' : 'available',
+                        'is_peak' => $isPeak,
+                        'price' => $price,
+                        'booked_by_name' => $isBooked ? 'Apex Club Member' : null,
+                    ]);
+                }
+            }
+        }
+
+        // Tenant 2 Credit Ledger & Booking
+        CreditLedger::create([
+            'tenant_id' => $t2->id,
+            'user_id' => $t2Nishan->id,
+            'amount_in' => 10000.00,
+            'balance_after' => 10000.00,
+            'reason' => 'Apex Arena Member Deposit',
+            'reference_type' => 'topup',
+            'created_by' => $t2Owner->id,
+        ]);
+
+        Booking::create([
+            'tenant_id' => $t2->id,
+            'court_id' => $t2Courts[0]->id,
+            'user_id' => $t2Nishan->id,
+            'booking_reference' => 'APEX-2026-101',
+            'booking_date' => $today->copy()->addDays(2)->toDateString(),
             'start_time' => '18:00',
             'end_time' => '20:00',
-            'customer_name' => $customerKavinda->name,
-            'customer_email' => $customerKavinda->email,
-            'customer_phone' => $customerKavinda->phone,
+            'customer_name' => $t2Nishan->name,
+            'customer_email' => $t2Nishan->email,
+            'customer_phone' => $t2Nishan->phone,
             'status' => 'confirmed',
             'payment_status' => 'paid',
-            'payment_method' => 'pass',
-            'base_amount' => 11600.00,
-            'addons_amount' => 1500.00,
-            'discount_amount' => 11600.00, // Covered by pass
-            'tax_amount' => 0,
-            'total_amount' => 1500.00,
-            'price_breakdown' => [
-                'base_rate' => 5800.00,
-                'hours' => 2,
-                'pass_redemption' => '10-Session Pass (2 units)',
-                'addons_total' => 1500.00
-            ],
-        ]);
-
-        BookingAddOn::create([
-            'booking_id' => $b2->id,
-            'add_on_id' => $addonBalls->id,
-            'name' => $addonBalls->name,
-            'quantity' => 1,
-            'unit_price' => 1500.00,
-            'total_price' => 1500.00,
+            'payment_method' => 'credits',
+            'base_amount' => 7000.00,
+            'addons_amount' => 800.00,
+            'total_amount' => 7800.00,
         ]);
     }
 }

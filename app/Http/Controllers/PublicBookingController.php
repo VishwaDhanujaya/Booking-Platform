@@ -8,21 +8,17 @@ use App\Models\SportCategory;
 use App\Models\Court;
 use App\Models\TimeSlot;
 use App\Models\Booking;
+use App\Services\TenantResolver;
 use Carbon\Carbon;
 
 class PublicBookingController extends Controller
 {
     public function index(Request $request)
     {
-        $tenant = Tenant::first(['*']);
-        if (!$tenant) {
-            $tenant = new Tenant(['id' => 1, 'name' => 'Colombo Courts Club', 'slug' => 'colombo-courts-club']);
-            $tenant->id = 1;
-        }
-
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         $tenantId = (int) $tenant->id;
 
-        $categories = SportCategory::where('tenant_id', '=', $tenantId, 'and')->withCount('courts')->get();
+        $categories = SportCategory::withCount('courts')->get();
 
         $selectedSportSlug = (string) $request->query('sport', 'all');
         $courtTypeFilter = (string) $request->query('type', 'all');
@@ -34,18 +30,16 @@ class PublicBookingController extends Controller
             $selectedDate = Carbon::today();
         }
 
-        $courtsQuery = Court::where('tenant_id', '=', $tenantId, 'and')
-            ->where('is_active', '=', true, 'and')
-            ->with('sportCategory');
+        $courtsQuery = Court::where('is_active', '=', true)->with('sportCategory');
 
         if ($selectedSportSlug !== 'all') {
             $courtsQuery->whereHas('sportCategory', function ($q) use ($selectedSportSlug) {
-                $q->where('slug', '=', $selectedSportSlug, 'and');
+                $q->where('slug', '=', $selectedSportSlug);
             });
         }
 
         if ($courtTypeFilter !== 'all') {
-            $courtsQuery->where('type', '=', $courtTypeFilter, 'and');
+            $courtsQuery->where('type', '=', $courtTypeFilter);
         }
 
         $courts = $courtsQuery->get();
@@ -64,9 +58,9 @@ class PublicBookingController extends Controller
             $loopDateStr = $loopDate->toDateString();
 
             if ($selectedCourt) {
-                $availCount = TimeSlot::where('court_id', '=', $selectedCourt->id, 'and')
-                    ->where('date', '=', $loopDateStr, 'and')
-                    ->where('status', '=', 'available', 'and')
+                $availCount = TimeSlot::where('court_id', '=', $selectedCourt->id)
+                    ->where('date', '=', $loopDateStr)
+                    ->where('status', '=', 'available')
                     ->count();
             } else {
                 $availCount = 0;
@@ -85,8 +79,8 @@ class PublicBookingController extends Controller
 
         $timeSlots = collect();
         if ($selectedCourt) {
-            $timeSlots = TimeSlot::where('court_id', '=', $selectedCourt->id, 'and')
-                ->where('date', '=', $selectedDate->toDateString(), 'and')
+            $timeSlots = TimeSlot::where('court_id', '=', $selectedCourt->id)
+                ->where('date', '=', $selectedDate->toDateString())
                 ->orderBy('start_time')
                 ->get();
         }
@@ -94,8 +88,8 @@ class PublicBookingController extends Controller
         $allCourtsTimeSlots = [];
         if ($courts->isNotEmpty()) {
             foreach ($courts as $court) {
-                $allCourtsTimeSlots[$court->id] = TimeSlot::where('court_id', '=', $court->id, 'and')
-                    ->where('date', '=', $selectedDate->toDateString(), 'and')
+                $allCourtsTimeSlots[$court->id] = TimeSlot::where('court_id', '=', $court->id)
+                    ->where('date', '=', $selectedDate->toDateString())
                     ->orderBy('start_time')
                     ->get();
             }
@@ -117,18 +111,18 @@ class PublicBookingController extends Controller
 
     public function checkout(Request $request)
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         
         $courtId = (int) $request->query('court_id', 1);
-        $court = Court::with('sportCategory')->find($courtId, ['*']) ?? Court::first(['*']);
+        $court = Court::with('sportCategory')->find($courtId) ?? Court::first();
 
         $slotIds = array_filter(explode(',', (string) $request->query('slots', '1,2')));
-        $slots = TimeSlot::whereIn('id', $slotIds, 'and', false)->orderBy('start_time')->get();
+        $slots = TimeSlot::whereIn('id', $slotIds)->orderBy('start_time')->get();
 
         if ($slots->isEmpty()) {
             $date = Carbon::today()->addDay()->toDateString();
-            $slots = TimeSlot::where('court_id', '=', $court->id, 'and')
-                ->where('date', '=', $date, 'and')
+            $slots = TimeSlot::where('court_id', '=', $court->id)
+                ->where('date', '=', $date)
                 ->limit(2)
                 ->get();
         }
@@ -155,11 +149,11 @@ class PublicBookingController extends Controller
 
     public function process(Request $request)
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         $courtId = (int) $request->input('court_id', 1);
-        $court = Court::find($courtId, ['*']) ?? Court::first(['*']);
+        $court = Court::find($courtId) ?? Court::first();
 
-        $refNumber = 'CCC-2026-' . rand(1000, 9999);
+        $refNumber = strtoupper(substr($tenant->slug, 0, 3)) . '-2026-' . rand(1000, 9999);
 
         $addons = [];
         if ($request->has('addon_rackets')) {
@@ -200,8 +194,8 @@ class PublicBookingController extends Controller
 
     public function confirmation(Request $request, string $reference)
     {
-        $tenant = Tenant::first(['*']);
-        $booking = Booking::where('booking_reference', '=', $reference, 'and')->with('court.sportCategory')->first();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $booking = Booking::where('booking_reference', '=', $reference)->with('court.sportCategory')->first();
 
         if (!$booking) {
             $booking = Booking::with('court.sportCategory')->first() ?? new Booking([
