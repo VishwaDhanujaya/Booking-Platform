@@ -1,58 +1,105 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Multi-Tenant Court & Sports Facility Booking Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A high-performance, multi-tenant booking engine built with **Laravel** and **Tailwind CSS** designed for sports clubs, court owners (Tennis, Padel, Badminton, Squash), and multi-facility venues.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🏢 Multi-Tenancy Architecture
+- Shared database model with strict tenant isolation via `BelongsToTenant` Eloquent trait and global query scoping.
+- Support for custom tenant branding, primary colors, subdomains, and subscription plans (`starter`, `pro`, `enterprise`).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 🔐 Authentication & Role-Based Access Control (RBAC)
+- Role-based permissions for:
+  - **Owner**: Full facility settings, tenant management, and staff administration.
+  - **Manager**: Operational control over court schedules, pricing rules, and customer ledgers.
+  - **Trainer / Staff**: Court coaching schedules and attendance tracking.
+  - **Front Desk**: Walk-in reservations, check-ins, and manual bank transfer approvals.
+  - **Customer**: Court slot search, booking checkout, credit/pass redemption, and account portal.
+- Customer ban management with auto-suspension triggers after excessive no-shows.
 
-## Learning Laravel
+### 🎾 Court & Resource Management
+- Support for indoor, outdoor, and covered courts across multiple sports (Tennis, Padel, Badminton, Squash).
+- Configurable court properties: hourly rates, peak rates, surface types, max capacity, and buffer times.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 📅 Matrix Availability & Schedule Overrides
+- Real-time time slot matrix per court for 7-day rolling availability.
+- Recurring operating schedules and one-off blocked time slots for tournament enclosures or court maintenance.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 💰 Dynamic Pricing Engine
+- Automated pricing adjustments evaluating:
+  - **Peak / Off-Peak Windows**: E.g., evening peak surcharges.
+  - **Seasonal Date Ranges**: Weekend or holiday special rates.
+  - **Tiered Discounts**: Student, senior, club member, and multi-slot bulk booking discounts.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 💳 Payment Abstraction & Internal Tender
+- **Payment Contract**: Pluggable `PaymentGatewayInterface` with `ManualOfflinePaymentGateway` implementation supporting **Bank Transfer** (payment pending until staff approval) and **Pay at Venue**.
+- **Internal Wallet Credits**: Full audit trail credit ledger (`amount_in`, `amount_out`, `balance_after`, `reason`, `reference`).
+- **Customer Passes & Punch Cards**: Prepaid multi-unit passes with unit redemption tracking.
 
-## Agentic Development
+### 🎒 Reusable Add-On Inventory
+- Itemized rental extras (rackets, match ball tubes, locker access, floodlights) priced per booking, per hour, or per item.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
+## 🛠 Tech Stack
+
+- **Backend**: [Laravel 11](https://laravel.com) (PHP 8.2+)
+- **Frontend**: Blade Components, Tailwind CSS, Alpine.js
+- **Database**: SQLite (Local Dev) / MySQL / PostgreSQL
+- **Asset Bundler**: [Vite](https://vitejs.dev)
+
+---
+
+## ⚡ Quick Start & Local Setup
+
+### 1. Clone Repository & Install Dependencies
 ```bash
-composer require laravel/boost --dev
+git clone https://github.com/VishwaDhanujaya/Booking-Platform.git
+cd Booking-Platform
 
-php artisan boost:install
+composer install
+npm install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Environment Configuration
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+### 3. Database Migration & Seeders
+Run a fresh migration with full sample seeders (tenants, roles, users, courts, schedules, pricing rules, credit ledgers, and sample bookings):
+```bash
+php artisan migrate:fresh --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Run Development Server
+```bash
+# Terminal 1: Laravel Backend
+php artisan serve
 
-## Code of Conduct
+# Terminal 2: Asset Compiler
+npm run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Visit the application at `http://localhost:8000`.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🔐 Default Demo Accounts
 
-## License
+| Role | Email | Password |
+|---|---|---|
+| **Owner / Admin** | `admin@colombocourts.lk` | `password` |
+| **Manager** | `manager@colombocourts.lk` | `password` |
+| **Trainer / Staff** | `staff@colombocourts.lk` | `password` |
+| **Front Desk** | `frontdesk@colombocourts.lk` | `password` |
+| **Customer (Kavinda)** | `kavinda@example.com` | `password` |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 📜 License
+
+This project is open-sourced under the [MIT license](LICENSE).
