@@ -115,7 +115,7 @@ class TenantResolver
                 'accent_hex' => '#0f172a',
                 'logo_url' => $tenant->logo_url,
                 'logo_initial' => strtoupper(substr($tenant->name, 0, 1)),
-                'badge' => $tenant->name . ' • Premier Sports Venue',
+                'badge' => $tenant->name,
                 'hero_title' => 'Reserve Premium ' . $tenant->name . ' Courts Online',
                 'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated lighting and court scheduling.',
                 'tagline' => 'Premier multi-tenant court booking & facility platform powered by SLT Digital Engine.',

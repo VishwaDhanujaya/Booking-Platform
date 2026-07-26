@@ -58,7 +58,7 @@
             <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700/70 flex flex-col gap-2">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
                         <span class="text-xs font-bold text-slate-200">{{ $tenantName }}</span>
                     </div>
                     <span class="text-[9px] font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-md font-bold">{{ strtoupper($tenantSlug) }}</span>

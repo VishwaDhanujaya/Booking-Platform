@@ -15,9 +15,9 @@
                 <!-- Left Hero Copy -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 uppercase tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-accent-400 animate-pulse"></span>
-                        <span>{{ $t['badge'] }}</span>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>Online Court Reservations</span>
                     </div>
 
                     <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">
