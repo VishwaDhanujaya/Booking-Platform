@@ -99,20 +99,50 @@ class TenantResolver
         $tenant = static::getActiveTenantModel();
 
         if ($tenant) {
+            $brandHex = $tenant->brand_color ?? '#0284c7';
             return [
                 'id' => $tenant->id,
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
-                'address' => $tenant->address,
-                'phone' => $tenant->phone,
-                'email' => $tenant->email,
-                'brand_color' => $tenant->brand_color ?? '#0284c7',
+                'domain' => $tenant->domain,
+                'address' => $tenant->address ?? 'Colombo, Sri Lanka',
+                'phone' => $tenant->phone ?? '+94 11 234 5678',
+                'email' => $tenant->email ?? ('info@' . $tenant->slug . '.lk'),
+                'brand_color' => $brandHex,
+                'primary_hex' => $brandHex,
+                'primary_hover' => $brandHex,
+                'primary_light' => '#f0f9ff',
+                'accent_hex' => '#0f172a',
                 'logo_url' => $tenant->logo_url,
+                'logo_initial' => strtoupper(substr($tenant->name, 0, 1)),
+                'badge' => $tenant->name . ' • Premier Sports Venue',
+                'hero_title' => 'Reserve Premium ' . $tenant->name . ' Courts Online',
+                'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated lighting and court scheduling.',
+                'tagline' => 'Premier multi-tenant court booking & facility platform powered by SLT Digital Engine.',
+                'sports' => ['Tennis', 'Padel', 'Badminton', 'Squash'],
                 'theme_settings' => $tenant->theme_settings ?? [],
             ];
         }
 
-        return config('tenants.colombo-courts-club', []);
+        return config('tenants.colombo-courts-club', [
+            'id' => 1,
+            'name' => 'Colombo Courts Club',
+            'slug' => 'colombo-courts-club',
+            'address' => '45 Maitland Crescent, Colombo 00700, Sri Lanka',
+            'phone' => '+94 11 234 5678',
+            'email' => 'info@colombocourts.lk',
+            'brand_color' => '#0284c7',
+            'primary_hex' => '#0284c7',
+            'primary_hover' => '#0369a1',
+            'primary_light' => '#f0f9ff',
+            'accent_hex' => '#0f172a',
+            'logo_initial' => 'C',
+            'badge' => 'Colombo Courts Club • Premier Sports Venue',
+            'hero_title' => 'Reserve Premium Colombo Courts Online',
+            'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash.',
+            'tagline' => 'Premier multi-tenant court booking & facility platform.',
+            'sports' => ['Tennis', 'Padel', 'Badminton', 'Squash'],
+        ]);
     }
 
     public static function getAllTenants()
