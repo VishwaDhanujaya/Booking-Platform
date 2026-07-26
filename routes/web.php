@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-account', [CustomerDashboardController::class, 'index'])->name('customer.my-bookings');
     Route::post('/my-account/cancel/{id}', [CustomerDashboardController::class, 'cancelBooking'])->name('customer.booking.cancel');
     Route::post('/my-account/profile', [CustomerDashboardController::class, 'updateProfile'])->name('customer.profile.update');
+    Route::post('/booking/waitlist', [PublicBookingController::class, 'joinWaitlist'])->name('booking.waitlist');
 });
 
 // Admin / Staff Management Portal Routes (Role Enforced)
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.bookings');
     Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
+    Route::post('/admin/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow'])->name('admin.bookings.noshow');
     
     // Manage Courts restricted to Owner & Manager
     Route::middleware('role:owner,manager')->group(function () {

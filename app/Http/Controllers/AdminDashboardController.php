@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\TimeSlot;
 use App\Models\User;
 use App\Services\TenantResolver;
+use App\Services\BookingEngineService;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
@@ -19,7 +20,6 @@ class AdminDashboardController extends Controller
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         $today = Carbon::today()->toDateString();
 
-        // Real Summary KPI Metrics from database
         $stats = [
             'bookings_today' => Booking::where('booking_date', '=', $today)->count(),
             'weekly_revenue' => Booking::where('payment_status', '=', 'paid')
@@ -102,5 +102,15 @@ class AdminDashboardController extends Controller
         ]);
 
         return redirect()->route('admin.courts')->with('status', 'New court resource created successfully!');
+    }
+
+    public function markNoShow(Request $request, int $id, BookingEngineService $bookingEngine)
+    {
+        $booking = Booking::findOrFail($id);
+        $staffUser = auth()->user();
+
+        $bookingEngine->markNoShow($booking, $staffUser, $request->input('notes'));
+
+        return back()->with('status', "Booking {$booking->booking_reference} marked as No-Show. Customer attendance record updated.");
     }
 }

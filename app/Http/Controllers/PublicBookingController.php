@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Tenant;
 use App\Models\SportCategory;
 use App\Models\Court;
 use App\Models\TimeSlot;
 use App\Models\Booking;
+use App\Models\CustomerPass;
 use App\Services\TenantResolver;
+use App\Services\BookingEngineService;
 use Carbon\Carbon;
 
 class PublicBookingController extends Controller
@@ -16,7 +19,6 @@ class PublicBookingController extends Controller
     public function index(Request $request)
     {
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
-        $tenantId = (int) $tenant->id;
 
         $categories = SportCategory::withCount('courts')->get();
 
@@ -136,6 +138,10 @@ class PublicBookingController extends Controller
             $baseCourtPrice = $court ? $court->hourly_rate * 2 : 7000;
         }
 
+        $activePass = Auth::check() 
+            ? CustomerPass::where('user_id', Auth::id())->where('status', 'active')->first() 
+            : null;
+
         return view('booking.checkout', compact(
             'tenant',
             'court',
@@ -143,17 +149,26 @@ class PublicBookingController extends Controller
             'bookingDate',
             'startTime',
             'endTime',
-            'baseCourtPrice'
+            'baseCourtPrice',
+            'activePass'
         ));
     }
 
-    public function process(Request $request)
+    public function process(Request $request, BookingEngineService $bookingEngine)
     {
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         $courtId = (int) $request->input('court_id', 1);
-        $court = Court::find($courtId) ?? Court::first();
+        $court = Court::findOrFail($courtId);
 
-        $refNumber = strtoupper(substr($tenant->slug, 0, 3)) . '-2026-' . rand(1000, 9999);
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please sign in to complete your court reservation.');
+        }
+
+        $date = $request->input('booking_date', Carbon::today()->toDateString());
+        $startTime = $request->input('start_time', '17:00');
+        $endTime = $request->input('end_time', '19:00');
+        $paymentMethod = $request->input('payment_method', 'pay_at_venue');
 
         $addons = [];
         if ($request->has('addon_rackets')) {
@@ -169,27 +184,58 @@ class PublicBookingController extends Controller
             $addons[] = ['name' => 'Night LED Floodlights', 'price' => 1000];
         }
 
-        $addonsTotal = array_sum(array_column($addons, 'price'));
-        $basePrice = floatval($request->input('base_price', 7000));
-        $totalAmount = $basePrice + $addonsTotal;
+        try {
+            $pass = null;
+            if ($paymentMethod === 'pass') {
+                $pass = CustomerPass::where('user_id', $user->id)->where('status', 'active')->first();
+            }
 
-        $booking = Booking::create([
-            'tenant_id' => $tenant->id,
-            'court_id' => $court->id,
-            'booking_reference' => $refNumber,
-            'booking_date' => $request->input('booking_date', Carbon::today()->toDateString()),
-            'start_time' => $request->input('start_time', '17:00'),
-            'end_time' => $request->input('end_time', '19:00'),
-            'customer_name' => $request->input('customer_name', 'Kavinda Perera'),
-            'customer_email' => $request->input('customer_email', 'kavinda@example.com'),
-            'customer_phone' => $request->input('customer_phone', '+94 77 123 4567'),
-            'total_amount' => $totalAmount,
-            'status' => 'confirmed',
-            'payment_status' => 'paid',
-            'addons' => $addons,
+            $booking = $bookingEngine->createBooking(
+                $user,
+                $court,
+                $date,
+                $startTime,
+                $endTime,
+                $addons,
+                $paymentMethod,
+                $pass
+            );
+
+            return redirect()->route('booking.confirmation', ['reference' => $booking->booking_reference]);
+        } catch (\Exception $e) {
+            return back()->withInput()->withErrors(['booking' => $e->getMessage()]);
+        }
+    }
+
+    public function joinWaitlist(Request $request, BookingEngineService $bookingEngine)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please sign in to join court waitlists.');
+        }
+
+        $request->validate([
+            'court_id' => ['required', 'integer'],
+            'booking_date' => ['required', 'date'],
+            'start_time' => ['required', 'string'],
+            'end_time' => ['required', 'string'],
         ]);
 
-        return redirect()->route('booking.confirmation', ['reference' => $booking->booking_reference]);
+        $court = Court::findOrFail($request->court_id);
+
+        try {
+            $waitlist = $bookingEngine->joinWaitlist(
+                $user,
+                $court,
+                $request->booking_date,
+                $request->start_time,
+                $request->end_time
+            );
+
+            return back()->with('status', "Joined waitlist successfully! Position #{$waitlist->position} in line.");
+        } catch (\Exception $e) {
+            return back()->withErrors(['waitlist' => $e->getMessage()]);
+        }
     }
 
     public function confirmation(Request $request, string $reference)
@@ -198,18 +244,7 @@ class PublicBookingController extends Controller
         $booking = Booking::where('booking_reference', '=', $reference)->with('court.sportCategory')->first();
 
         if (!$booking) {
-            $booking = Booking::with('court.sportCategory')->first() ?? new Booking([
-                'booking_reference' => $reference,
-                'booking_date' => Carbon::today()->toDateString(),
-                'start_time' => '17:00',
-                'end_time' => '19:00',
-                'customer_name' => 'Kavinda Perera',
-                'customer_email' => 'kavinda@example.com',
-                'customer_phone' => '+94 77 123 4567',
-                'total_amount' => 9700.00,
-                'status' => 'confirmed',
-                'payment_status' => 'paid',
-            ]);
+            return redirect()->route('booking.index');
         }
 
         return view('booking.confirmation', compact('tenant', 'booking'));

@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\CustomerPass;
 use App\Models\CreditLedger;
 use App\Services\TenantResolver;
+use App\Services\BookingEngineService;
 use Carbon\Carbon;
 
 class CustomerDashboardController extends Controller
@@ -24,7 +25,6 @@ class CustomerDashboardController extends Controller
             ->orderBy('booking_date', 'desc')
             ->get();
 
-        // Fallback: If guest/demo user without user_id, fetch by email
         if ($allBookings->isEmpty()) {
             $allBookings = Booking::where('customer_email', '=', $user->email)
                 ->with('court.sportCategory')
@@ -46,7 +46,6 @@ class CustomerDashboardController extends Controller
             return $b->status === 'cancelled';
         });
 
-        // Real Customer Profile & Credits/Passes
         $customer = [
             'name' => $user->name,
             'email' => $user->email,
@@ -78,36 +77,23 @@ class CustomerDashboardController extends Controller
         ));
     }
 
-    public function cancelBooking(Request $request, int $id)
+    public function cancelBooking(Request $request, int $id, BookingEngineService $bookingEngine)
     {
         $user = Auth::user();
         $booking = Booking::where('id', $id)->where(function ($q) use ($user) {
             $q->where('user_id', $user->id)->orWhere('customer_email', $user->email);
         })->first();
 
-        if ($booking && $booking->status !== 'cancelled') {
-            $booking->status = 'cancelled';
-            $booking->cancellation_reason = 'Cancelled by customer from account portal.';
-            $booking->cancelled_at = Carbon::now();
-            $booking->save();
-
-            // Auto refund to credit ledger if paid with credits
-            if ($booking->payment_status === 'paid' && $booking->payment_method === 'credits') {
-                CreditLedger::create([
-                    'tenant_id' => $booking->tenant_id,
-                    'user_id' => $user->id,
-                    'booking_id' => $booking->id,
-                    'amount_in' => $booking->total_amount,
-                    'balance_after' => $user->credit_balance + $booking->total_amount,
-                    'reason' => "Refund for cancelled booking {$booking->booking_reference}",
-                    'reference_type' => 'refund',
-                ]);
-                $booking->payment_status = 'refunded';
-                $booking->save();
+        if ($booking) {
+            try {
+                $bookingEngine->cancelBooking($booking, 'Cancelled by customer via account portal');
+                return redirect()->route('customer.my-bookings')->with('status', "Booking {$booking->booking_reference} has been cancelled successfully.");
+            } catch (\Exception $e) {
+                return redirect()->route('customer.my-bookings')->withErrors(['cancel' => $e->getMessage()]);
             }
         }
 
-        return redirect()->route('customer.my-bookings')->with('status', 'Booking reference ' . ($booking ? $booking->booking_reference : '') . ' has been cancelled.');
+        return redirect()->route('customer.my-bookings');
     }
 
     public function updateProfile(Request $request)
