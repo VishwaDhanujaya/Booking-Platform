@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Role;
 use App\Services\TenantResolver;
@@ -94,7 +95,6 @@ class AuthController extends Controller
             'role' => 'customer',
         ]);
 
-        // Attach customer role if exists
         if ($tenant) {
             $customerRole = Role::where('tenant_id', $tenant->id)->where('slug', 'customer')->first();
             if ($customerRole) {
@@ -105,9 +105,30 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        Log::info("New customer account registered: {$user->email} for Tenant: {$tenant?->name}");
+        Log::info("[MAIL SIMULATION] Welcome email sent to registered user: {$user->email} [Tenant: {$tenant?->name}]");
 
         return redirect()->route('customer.my-bookings')->with('status', 'Account created successfully! Welcome to ' . ($tenant?->name ?? 'our platform'));
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => ['required', 'email']]);
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            $token = Str::random(32);
+            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+
+            Log::info("==========================================");
+            Log::info("[MAIL SIMULATION] PASSWORD RESET REQUEST");
+            Log::info("Recipient: {$user->email}");
+            Log::info("Reset Link: {$resetUrl}");
+            Log::info("==========================================");
+
+            return back()->with('status', 'A password reset link has been generated and logged to console/logs!');
+        }
+
+        return back()->withErrors(['email' => 'We could not find a user with that email address.']);
     }
 
     public function logout(Request $request)

@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::define('access-admin', function (User $user) {
+            return in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'super_admin']);
+        });
+
+        Gate::define('manage-courts', function (User $user) {
+            return in_array($user->role, ['owner', 'manager', 'super_admin']);
+        });
+
+        Gate::define('manage-staff', function (User $user) {
+            return in_array($user->role, ['owner', 'manager', 'super_admin']);
+        });
+
+        Gate::define('view-bookings', function (User $user) {
+            return in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'super_admin']);
+        });
     }
 }
