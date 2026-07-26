@@ -118,7 +118,7 @@ class TenantResolver
                 'badge' => $tenant->name,
                 'hero_title' => 'Reserve Premium ' . $tenant->name . ' Courts Online',
                 'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated lighting and court scheduling.',
-                'tagline' => 'Premier multi-tenant court booking & facility platform powered by SLT Digital Engine.',
+                'tagline' => 'Premier multi-tenant court booking & facility platform.',
                 'sports' => ['Tennis', 'Padel', 'Badminton', 'Squash'],
                 'theme_settings' => $tenant->theme_settings ?? [],
             ];
@@ -137,7 +137,7 @@ class TenantResolver
             'primary_light' => '#f0f9ff',
             'accent_hex' => '#0f172a',
             'logo_initial' => 'C',
-            'badge' => 'Colombo Courts Club • Premier Sports Venue',
+            'badge' => 'Colombo Courts Club',
             'hero_title' => 'Reserve Premium Colombo Courts Online',
             'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash.',
             'tagline' => 'Premier multi-tenant court booking & facility platform.',

@@ -15,11 +15,6 @@
                 <!-- Left Hero Copy -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span>Online Court Reservations</span>
-                    </div>
-
                     <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">
                         {{ $t['hero_title'] }}
                     </h1>
@@ -36,31 +31,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </a>
-                        <a href="#courts" class="inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold text-white bg-slate-900/90 hover:bg-slate-900 border border-slate-800 transition-colors">
-                            Explore Facilities & Courts
+                        <a href="{{ route('pricing') }}" class="inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold text-white bg-slate-900/90 hover:bg-slate-900 border border-slate-800 transition-colors">
+                            Pricing & Rates
                         </a>
-                    </div>
-
-                    <!-- Trust indicators -->
-                    <div class="pt-6 flex flex-wrap items-center gap-6 text-xs text-slate-400">
-                        <div class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>No Membership Required</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Free Cancellation (4h)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Instant QR Entry</span>
-                        </div>
                     </div>
                 </div>
 

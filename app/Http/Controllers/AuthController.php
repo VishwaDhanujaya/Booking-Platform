@@ -96,7 +96,7 @@ class AuthController extends Controller
         ]);
 
         if ($tenant) {
-            $customerRole = Role::where('tenant_id', $tenant->id)->where('slug', 'customer')->first();
+            $customerRole = Role::where('tenant_id', '=', $tenant->id)->where('slug', '=', 'customer')->first();
             if ($customerRole) {
                 $user->roles()->attach($customerRole);
             }
@@ -113,11 +113,11 @@ class AuthController extends Controller
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => ['required', 'email']]);
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', '=', $request->email)->first();
 
         if ($user) {
             $token = Str::random(32);
-            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+            $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
 
             Log::info("==========================================");
             Log::info("[MAIL SIMULATION] PASSWORD RESET REQUEST");
