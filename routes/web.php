@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminDashboardController;
 
+// Public Guest Routes
 Route::get('/', function () {
     return view('home');
 })->name('home');
@@ -19,20 +20,31 @@ Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
 
-// Auth Routes
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.perform');
+// Auth Routes (Guest)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.perform');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Customer Dashboard Routes
-Route::get('/my-account', [CustomerDashboardController::class, 'index'])->name('customer.my-bookings');
-Route::post('/my-account/cancel/{id}', [CustomerDashboardController::class, 'cancelBooking'])->name('customer.booking.cancel');
-Route::post('/my-account/profile', [CustomerDashboardController::class, 'updateProfile'])->name('customer.profile.update');
+// Customer Protected Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/my-account', [CustomerDashboardController::class, 'index'])->name('customer.my-bookings');
+    Route::post('/my-account/cancel/{id}', [CustomerDashboardController::class, 'cancelBooking'])->name('customer.booking.cancel');
+    Route::post('/my-account/profile', [CustomerDashboardController::class, 'updateProfile'])->name('customer.profile.update');
+});
 
-// Admin / Staff Management Portal Routes
-Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-Route::get('/admin/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.bookings');
-Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
-Route::post('/admin/courts', [AdminDashboardController::class, 'storeCourt'])->name('admin.courts.store');
+// Admin / Staff Management Portal Routes (Role Enforced)
+Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->group(function () {
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.bookings');
+    Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
+    
+    // Manage Courts restricted to Owner & Manager
+    Route::middleware('role:owner,manager')->group(function () {
+        Route::post('/admin/courts', [AdminDashboardController::class, 'storeCourt'])->name('admin.courts.store');
+    });
+});

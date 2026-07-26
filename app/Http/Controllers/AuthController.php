@@ -3,39 +3,119 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Tenant;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\Role;
+use App\Services\TenantResolver;
 
 class AuthController extends Controller
 {
     public function showLogin()
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel();
         return view('auth.login', compact('tenant'));
     }
 
     public function login(Request $request)
     {
-        // Mock authentication - successful login simulation
-        session(['user_name' => 'Kavinda Perera', 'user_email' => $request->input('email', 'kavinda@example.com'), 'is_logged_in' => true]);
-        return redirect()->route('customer.my-bookings');
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        $tenant = TenantResolver::getActiveTenantModel();
+
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()->withInput($request->only('email'))->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+        $user = Auth::user();
+
+        // 1. Check if account is suspended / banned
+        if ($user->is_banned) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account has been suspended. Reason: ' . ($user->ban_reason ?? 'Violation of facility policies.'),
+            ]);
+        }
+
+        // 2. Check tenant scope matching (unless super_admin)
+        if ($user->role !== 'super_admin' && $tenant && $user->tenant_id && (int) $user->tenant_id !== (int) $tenant->id) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => "This account is registered under another facility tenant. Please access your facility URL.",
+            ]);
+        }
+
+        Log::info("User logged in successfully: {$user->email} [Role: {$user->role}] for Tenant: {$tenant?->name}");
+
+        // 3. Role-based redirect
+        if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'super_admin'])) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->intended(route('customer.my-bookings'));
     }
 
     public function showRegister()
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel();
         return view('auth.register', compact('tenant'));
     }
 
     public function register(Request $request)
     {
-        // Mock registration simulation
-        session(['user_name' => $request->input('name', 'Kavinda Perera'), 'user_email' => $request->input('email', 'kavinda@example.com'), 'is_logged_in' => true]);
-        return redirect()->route('customer.my-bookings');
+        $tenant = TenantResolver::getActiveTenantModel();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $user = User::create([
+            'tenant_id' => $tenant?->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => Hash::make($validated['password']),
+            'role' => 'customer',
+        ]);
+
+        // Attach customer role if exists
+        if ($tenant) {
+            $customerRole = Role::where('tenant_id', $tenant->id)->where('slug', 'customer')->first();
+            if ($customerRole) {
+                $user->roles()->attach($customerRole);
+            }
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        Log::info("New customer account registered: {$user->email} for Tenant: {$tenant?->name}");
+
+        return redirect()->route('customer.my-bookings')->with('status', 'Account created successfully! Welcome to ' . ($tenant?->name ?? 'our platform'));
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        session()->forget(['user_name', 'user_email', 'is_logged_in']);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('home');
     }
 }

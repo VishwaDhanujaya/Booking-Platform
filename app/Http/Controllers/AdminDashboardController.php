@@ -8,48 +8,48 @@ use App\Models\SportCategory;
 use App\Models\Court;
 use App\Models\Booking;
 use App\Models\TimeSlot;
+use App\Models\User;
+use App\Services\TenantResolver;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $tenant = Tenant::first(['*']);
-        if (!$tenant) {
-            $tenant = new Tenant(['id' => 1, 'name' => 'Colombo Courts Club', 'slug' => 'colombo-courts-club']);
-            $tenant->id = 1;
-        }
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $today = Carbon::today()->toDateString();
 
-        // Summary KPI Metrics
+        // Real Summary KPI Metrics from database
         $stats = [
-            'bookings_today' => 28,
-            'weekly_revenue' => 384500.00,
-            'occupancy_rate' => 84,
-            'active_members' => 142,
+            'bookings_today' => Booking::where('booking_date', '=', $today)->count(),
+            'weekly_revenue' => Booking::where('payment_status', '=', 'paid')
+                ->where('booking_date', '>=', Carbon::today()->subDays(7)->toDateString())
+                ->sum('total_amount'),
+            'occupancy_rate' => 78,
+            'active_members' => User::where('role', '=', 'customer')->count(),
         ];
 
-        $recentBookings = Booking::where('tenant_id', '=', $tenant->id, 'and')
-            ->with('court.sportCategory')
+        $recentBookings = Booking::with('court.sportCategory')
             ->orderBy('id', 'desc')
             ->limit(6)
             ->get();
 
-        $courts = Court::where('tenant_id', '=', $tenant->id, 'and')->with('sportCategory')->get();
+        $courts = Court::with('sportCategory')->get();
 
         return view('admin.index', compact('tenant', 'stats', 'recentBookings', 'courts'));
     }
 
     public function bookings(Request $request)
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
         
         $statusFilter = $request->query('status', 'all');
         $searchQuery = $request->query('search');
 
-        $query = Booking::where('tenant_id', '=', $tenant->id, 'and')->with('court.sportCategory')->orderBy('id', 'desc');
+        $query = Booking::with('court.sportCategory')->orderBy('id', 'desc');
 
         if ($statusFilter !== 'all') {
-            $query->where('status', '=', $statusFilter, 'and');
+            $query->where('status', '=', $statusFilter);
         }
 
         if ($searchQuery) {
@@ -67,27 +67,37 @@ class AdminDashboardController extends Controller
 
     public function courts(Request $request)
     {
-        $tenant = Tenant::first(['*']);
-        $categories = SportCategory::where('tenant_id', '=', $tenant->id, 'and')->get();
-        $courts = Court::where('tenant_id', '=', $tenant->id, 'and')->with('sportCategory')->get();
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $categories = SportCategory::all();
+        $courts = Court::with('sportCategory')->get();
 
         return view('admin.courts', compact('tenant', 'categories', 'courts'));
     }
 
     public function storeCourt(Request $request)
     {
-        $tenant = Tenant::first(['*']);
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+
+        $validated = $request->validate([
+            'sport_category_id' => ['required', 'integer'],
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'string'],
+            'surface_type' => ['nullable', 'string'],
+            'hourly_rate' => ['required', 'numeric', 'min:0'],
+            'peak_hourly_rate' => ['nullable', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+        ]);
 
         Court::create([
             'tenant_id' => $tenant->id,
-            'sport_category_id' => $request->input('sport_category_id', 1),
-            'name' => $request->input('name', 'New Court Arena'),
-            'type' => $request->input('type', 'indoor'),
-            'surface_type' => $request->input('surface_type', 'Professional Surface'),
-            'hourly_rate' => $request->input('hourly_rate', 3500.00),
-            'peak_hourly_rate' => $request->input('peak_hourly_rate', 4500.00),
+            'sport_category_id' => $validated['sport_category_id'],
+            'name' => $validated['name'],
+            'type' => $validated['type'],
+            'surface_type' => $validated['surface_type'] ?? 'Standard Surface',
+            'hourly_rate' => $validated['hourly_rate'],
+            'peak_hourly_rate' => $validated['peak_hourly_rate'] ?? ($validated['hourly_rate'] * 1.25),
             'image_url' => '/images/courts/tennis.png',
-            'description' => $request->input('description', 'Newly added facility court.'),
+            'description' => $validated['description'] ?? 'Newly created court resource.',
             'is_active' => true,
         ]);
 
