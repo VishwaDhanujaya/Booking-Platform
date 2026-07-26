@@ -18,7 +18,7 @@ class TenantResolver
         // 1. Explicit Query Param Override (?tenant=slug)
         if ($request->has('tenant')) {
             $slug = (string) $request->query('tenant');
-            $tenant = Tenant::where('slug', '=', $slug)->where('is_active', '=', true)->first();
+            $tenant = Tenant::where('slug', '=', $slug, 'and')->where('is_active', '=', true, 'and')->first(['*']);
             if ($tenant) {
                 static::setActiveTenantContext($tenant);
                 return $tenant;
@@ -29,14 +29,14 @@ class TenantResolver
         $host = $request->getHost();
         if ($host && $host !== 'localhost' && $host !== '127.0.0.1') {
             // Direct domain check
-            $tenant = Tenant::where('domain', '=', $host)->where('is_active', '=', true)->first();
+            $tenant = Tenant::where('domain', '=', $host, 'and')->where('is_active', '=', true, 'and')->first(['*']);
 
             // Subdomain check (e.g. "colombo" from "colombo.localhost")
             if (!$tenant) {
                 $hostParts = explode('.', $host);
                 if (count($hostParts) >= 2 && $hostParts[0] !== 'www') {
                     $subdomain = strtolower($hostParts[0]);
-                    $tenant = Tenant::where('slug', '=', $subdomain)->where('is_active', '=', true)->first();
+                    $tenant = Tenant::where('slug', '=', $subdomain, 'and')->where('is_active', '=', true, 'and')->first(['*']);
                 }
             }
 
@@ -48,7 +48,7 @@ class TenantResolver
 
         // 3. Session Fallback
         if (session()->has('tenant_id')) {
-            $tenant = Tenant::where('id', '=', session('tenant_id'))->where('is_active', '=', true)->first();
+            $tenant = Tenant::where('id', '=', session('tenant_id'), 'and')->where('is_active', '=', true, 'and')->first(['*']);
             if ($tenant) {
                 static::setActiveTenantContext($tenant);
                 return $tenant;
@@ -56,7 +56,7 @@ class TenantResolver
         }
 
         // 4. Default Local Dev Fallback (First active tenant in DB)
-        $tenant = Tenant::where('is_active', '=', true)->first();
+        $tenant = Tenant::where('is_active', '=', true, 'and')->first(['*']);
         if ($tenant) {
             static::setActiveTenantContext($tenant);
         }
@@ -88,10 +88,10 @@ class TenantResolver
         }
 
         if (session()->has('tenant_id')) {
-            return Tenant::find(session('tenant_id'));
+            return Tenant::find(session('tenant_id'), ['*']);
         }
 
-        return Tenant::first();
+        return Tenant::first(['*']);
     }
 
     public static function getActiveTenant(): array
@@ -147,6 +147,6 @@ class TenantResolver
 
     public static function getAllTenants()
     {
-        return Tenant::where('is_active', '=', true)->get();
+        return Tenant::where('is_active', '=', true, 'and')->get(['*']);
     }
 }
