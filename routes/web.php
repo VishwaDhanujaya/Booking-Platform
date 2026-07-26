@@ -47,8 +47,12 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
     Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
     Route::post('/admin/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow'])->name('admin.bookings.noshow');
     
-    // Manage Courts restricted to Owner & Manager
+    // Manage Courts & Pricing Rules restricted to Owner & Manager
     Route::middleware('role:owner,manager')->group(function () {
         Route::post('/admin/courts', [AdminDashboardController::class, 'storeCourt'])->name('admin.courts.store');
+        Route::get('/admin/pricing', [AdminDashboardController::class, 'pricing'])->name('admin.pricing');
+        Route::post('/admin/pricing', [AdminDashboardController::class, 'storePricingRule'])->name('admin.pricing.store');
+        Route::post('/admin/pricing/{id}/toggle', [AdminDashboardController::class, 'togglePricingRule'])->name('admin.pricing.toggle');
+        Route::delete('/admin/pricing/{id}', [AdminDashboardController::class, 'deletePricingRule'])->name('admin.pricing.delete');
     });
 });

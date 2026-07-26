@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\CreditLedger;
 use App\Models\CustomerPass;
 use App\Models\PassLedgerEntry;
+use App\Services\PricingEngineService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +19,15 @@ use Exception;
 
 class BookingEngineService
 {
+    protected PricingEngineService $pricingEngine;
+
+    public function __construct(?PricingEngineService $pricingEngine = null)
+    {
+        $this->pricingEngine = $pricingEngine ?? new PricingEngineService();
+    }
+
     /**
-     * Create a new booking with concurrency safety and limit checks.
+     * Create a new booking with concurrency safety, dynamic pricing engine, and limit checks.
      */
     public function createBooking(
         User $user,
@@ -66,34 +74,42 @@ class BookingEngineService
                 throw new Exception("Slot is already booked for this court and time range. You may join the waitlist instead.");
             }
 
-            // Calculate Base Price & Add-ons
-            $baseCourtPrice = $slots->sum('price');
-            if ($baseCourtPrice <= 0) {
-                $baseCourtPrice = $court->hourly_rate;
-            }
+            // Compute dynamic pricing via PricingEngineService
+            $slotCount = max(1, $slots->count());
+            $priceCalculation = $this->pricingEngine->calculatePrice(
+                $court,
+                $date,
+                $startTime,
+                $endTime,
+                $user,
+                $addons,
+                $slotCount
+            );
 
-            $addonsTotal = array_sum(array_column($addons, 'price'));
-            $discountAmount = 0;
+            $baseCourtPrice = $priceCalculation['base_rate'];
+            $addonsTotal = $priceCalculation['addons_amount'];
+            $discountAmount = $priceCalculation['discount_amount'];
+            $totalAmount = $priceCalculation['total_amount'];
 
             // Handle Payment Method Logic
             $paymentStatus = 'unpaid';
 
             if ($paymentMethod === 'credits') {
-                if ($user->credit_balance < ($baseCourtPrice + $addonsTotal)) {
-                    throw new Exception("Insufficient wallet credit balance. Required: LKR " . number_format($baseCourtPrice + $addonsTotal, 2));
+                if ($user->credit_balance < $totalAmount) {
+                    throw new Exception("Insufficient wallet credit balance. Required: LKR " . number_format($totalAmount, 2));
                 }
                 $paymentStatus = 'paid';
             } elseif ($paymentMethod === 'pass') {
                 if (!$pass || $pass->remaining_units < 1) {
                     throw new Exception("No remaining units on selected customer pass.");
                 }
-                $discountAmount = $baseCourtPrice;
+                $discountAmount = $totalAmount;
+                $totalAmount = 0;
                 $paymentStatus = 'paid';
             } elseif ($paymentMethod === 'bank_transfer') {
                 $paymentStatus = 'payment_pending';
             }
 
-            $totalAmount = ($baseCourtPrice + $addonsTotal) - $discountAmount;
             $refNumber = strtoupper(substr($court->tenant->slug ?? 'CCC', 0, 3)) . '-2026-' . rand(10000, 99999);
 
             $booking = Booking::create([
@@ -115,12 +131,7 @@ class BookingEngineService
                 'discount_amount' => $discountAmount,
                 'total_amount' => max(0, $totalAmount),
                 'addons' => $addons,
-                'price_breakdown' => [
-                    'base_rate' => $baseCourtPrice,
-                    'addons_total' => $addonsTotal,
-                    'discount_amount' => $discountAmount,
-                    'net_payable' => max(0, $totalAmount),
-                ],
+                'price_breakdown' => $priceCalculation['price_breakdown'],
             ]);
 
             // Deduct Credits if applicable
@@ -152,7 +163,7 @@ class BookingEngineService
                 ]);
             }
 
-            // Mark slots as booked
+            // Mark time slots as booked
             foreach ($slots as $s) {
                 $s->status = 'booked';
                 $s->booked_by_name = $user->name;

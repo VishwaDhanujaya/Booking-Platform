@@ -9,6 +9,7 @@ use App\Models\Court;
 use App\Models\Booking;
 use App\Models\TimeSlot;
 use App\Models\User;
+use App\Models\PricingRule;
 use App\Services\TenantResolver;
 use App\Services\BookingEngineService;
 use Carbon\Carbon;
@@ -112,5 +113,72 @@ class AdminDashboardController extends Controller
         $bookingEngine->markNoShow($booking, $staffUser, $request->input('notes'));
 
         return back()->with('status', "Booking {$booking->booking_reference} marked as No-Show. Customer attendance record updated.");
+    }
+
+    public function pricing(Request $request)
+    {
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $courts = Court::all();
+        $categories = SportCategory::all();
+        $pricingRules = PricingRule::orderBy('priority', 'asc')->get();
+
+        return view('admin.pricing', compact('tenant', 'courts', 'categories', 'pricingRules'));
+    }
+
+    public function storePricingRule(Request $request)
+    {
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'rule_type' => ['required', 'string'],
+            'discount_type' => ['nullable', 'string'],
+            'adjustment_type' => ['required', 'string'],
+            'adjustment_value' => ['required', 'numeric'],
+            'court_id' => ['nullable', 'integer'],
+            'sport_category_id' => ['nullable', 'integer'],
+            'start_time' => ['nullable', 'string'],
+            'end_time' => ['nullable', 'string'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'min_slots' => ['nullable', 'integer'],
+        ]);
+
+        PricingRule::create([
+            'tenant_id' => $tenant->id,
+            'court_id' => $validated['court_id'] ?: null,
+            'sport_category_id' => $validated['sport_category_id'] ?: null,
+            'name' => $validated['name'],
+            'rule_type' => $validated['rule_type'],
+            'discount_type' => $validated['discount_type'] ?? 'none',
+            'adjustment_type' => $validated['adjustment_type'],
+            'adjustment_value' => $validated['adjustment_value'],
+            'start_time' => $validated['start_time'] ?: null,
+            'end_time' => $validated['end_time'] ?: null,
+            'start_date' => $validated['start_date'] ?: null,
+            'end_date' => $validated['end_date'] ?: null,
+            'min_slots' => $validated['min_slots'] ?? 1,
+            'priority' => 1,
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('admin.pricing')->with('status', 'Pricing rule added successfully!');
+    }
+
+    public function togglePricingRule(int $id)
+    {
+        $rule = PricingRule::findOrFail($id);
+        $rule->is_active = !$rule->is_active;
+        $rule->save();
+
+        return redirect()->route('admin.pricing')->with('status', 'Pricing rule status updated.');
+    }
+
+    public function deletePricingRule(int $id)
+    {
+        $rule = PricingRule::findOrFail($id);
+        $rule->delete();
+
+        return redirect()->route('admin.pricing')->with('status', 'Pricing rule deleted.');
     }
 }
