@@ -11,8 +11,11 @@ use App\Models\Booking;
 use App\Models\TimeSlot;
 use App\Models\User;
 use App\Models\PricingRule;
+use App\Models\CreditLedger;
+use App\Models\CustomerPass;
 use App\Services\TenantResolver;
 use App\Services\BookingEngineService;
+use App\Services\CreditAndPassService;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
@@ -181,5 +184,55 @@ class AdminDashboardController extends Controller
         $rule->delete();
 
         return redirect()->route('admin.pricing')->with('status', 'Pricing rule deleted.');
+    }
+
+    public function customers(Request $request)
+    {
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
+        $customers = User::where('role', '=', 'customer', 'and')
+            ->with(['creditLedgers', 'passes'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.customers', compact('tenant', 'customers'));
+    }
+
+    public function issueCredits(Request $request, int $id, CreditAndPassService $creditAndPassService)
+    {
+        $customer = User::findOrFail($id);
+        $staffUser = Auth::user();
+
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:1'],
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $creditAndPassService->issueCredits($customer, (float)$validated['amount'], $validated['reason'], $staffUser);
+
+        return back()->with('status', "Issued LKR " . number_format($validated['amount'], 2) . " credits to {$customer->name} successfully.");
+    }
+
+    public function issuePass(Request $request, int $id, CreditAndPassService $creditAndPassService)
+    {
+        $customer = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'pass_name' => ['required', 'string', 'max:255'],
+            'total_units' => ['required', 'integer', 'min:1'],
+            'price_paid' => ['required', 'numeric', 'min:0'],
+            'valid_days' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $expiresAt = Carbon::today()->addDays((int)$validated['valid_days']);
+
+        $creditAndPassService->issuePass(
+            $customer,
+            $validated['pass_name'],
+            (int)$validated['total_units'],
+            (float)$validated['price_paid'],
+            $expiresAt
+        );
+
+        return back()->with('status', "Issued {$validated['pass_name']} ({$validated['total_units']} units) to {$customer->name} successfully.");
     }
 }

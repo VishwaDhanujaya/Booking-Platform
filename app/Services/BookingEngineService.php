@@ -12,6 +12,7 @@ use App\Models\CreditLedger;
 use App\Models\CustomerPass;
 use App\Models\PassLedgerEntry;
 use App\Services\PricingEngineService;
+use App\Services\CreditAndPassService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,14 +21,18 @@ use Exception;
 class BookingEngineService
 {
     protected PricingEngineService $pricingEngine;
+    protected CreditAndPassService $creditAndPassService;
 
-    public function __construct(?PricingEngineService $pricingEngine = null)
-    {
+    public function __construct(
+        ?PricingEngineService $pricingEngine = null,
+        ?CreditAndPassService $creditAndPassService = null
+    ) {
         $this->pricingEngine = $pricingEngine ?? new PricingEngineService();
+        $this->creditAndPassService = $creditAndPassService ?? new CreditAndPassService();
     }
 
     /**
-     * Create a new booking with concurrency safety, dynamic pricing engine, and limit checks.
+     * Create a new booking with concurrency safety, dynamic pricing engine, and credit/pass tender.
      */
     public function createBooking(
         User $user,
@@ -96,12 +101,12 @@ class BookingEngineService
 
             if ($paymentMethod === 'credits') {
                 if ($user->credit_balance < $totalAmount) {
-                    throw new Exception("Insufficient wallet credit balance. Required: LKR " . number_format($totalAmount, 2));
+                    throw new Exception("Insufficient wallet credit balance. Available: LKR " . number_format($user->credit_balance, 2) . ", Required: LKR " . number_format($totalAmount, 2));
                 }
                 $paymentStatus = 'paid';
             } elseif ($paymentMethod === 'pass') {
                 if (!$pass || $pass->remaining_units < 1) {
-                    throw new Exception("No remaining units on selected customer pass.");
+                    throw new Exception("No remaining session units on selected customer pass.");
                 }
                 $discountAmount = $totalAmount;
                 $totalAmount = 0;
@@ -134,33 +139,14 @@ class BookingEngineService
                 'price_breakdown' => $priceCalculation['price_breakdown'],
             ]);
 
-            // Deduct Credits if applicable
+            // Deduct Credits if tender is credits
             if ($paymentMethod === 'credits') {
-                CreditLedger::create([
-                    'tenant_id' => $court->tenant_id,
-                    'user_id' => $user->id,
-                    'booking_id' => $booking->id,
-                    'amount_out' => max(0, $totalAmount),
-                    'balance_after' => $user->credit_balance - max(0, $totalAmount),
-                    'reason' => "Payment for court booking {$booking->booking_reference}",
-                    'reference_type' => 'booking',
-                ]);
+                $this->creditAndPassService->deductCredits($user, max(0, $totalAmount), $booking);
             }
 
-            // Deduct Pass Unit if applicable
+            // Redeem Pass Unit if tender is customer pass
             if ($paymentMethod === 'pass' && $pass) {
-                $pass->decrement('remaining_units');
-                if ($pass->remaining_units <= 0) {
-                    $pass->update(['status' => 'exhausted']);
-                }
-
-                PassLedgerEntry::create([
-                    'customer_pass_id' => $pass->id,
-                    'booking_id' => $booking->id,
-                    'units_out' => 1,
-                    'units_after' => $pass->remaining_units,
-                    'reason' => "Redeemed 1 session unit for booking {$booking->booking_reference}",
-                ]);
+                $this->creditAndPassService->redeemPassUnit($pass, $booking);
             }
 
             // Mark time slots as booked
@@ -206,7 +192,7 @@ class BookingEngineService
     }
 
     /**
-     * Cancel booking with deadline policy enforcement and waitlist auto-promotion.
+     * Cancel booking with deadline policy enforcement, ledger credit refunds, pass restorations, and waitlist auto-promotion.
      */
     public function cancelBooking(Booking $booking, string $reason = 'Cancelled by user'): void
     {
@@ -226,15 +212,16 @@ class BookingEngineService
 
             if ($isEligibleForRefund && $booking->payment_status === 'paid') {
                 if ($booking->payment_method === 'credits' && $booking->user_id) {
-                    CreditLedger::create([
-                        'tenant_id' => $booking->tenant_id,
-                        'user_id' => $booking->user_id,
-                        'booking_id' => $booking->id,
-                        'amount_in' => $booking->total_amount,
-                        'balance_after' => $booking->user->credit_balance + $booking->total_amount,
-                        'reason' => "Refund for cancelled booking {$booking->booking_reference}",
-                        'reference_type' => 'refund',
-                    ]);
+                    $user = User::find($booking->user_id, ['*']);
+                    if ($user) {
+                        $this->creditAndPassService->refundCredits($user, $booking->total_amount, $booking);
+                    }
+                    $booking->payment_status = 'refunded';
+                } elseif ($booking->payment_method === 'pass' && $booking->user_id) {
+                    $pass = CustomerPass::where('user_id', '=', $booking->user_id, 'and')->first(['*']);
+                    if ($pass) {
+                        $this->creditAndPassService->restorePassUnit($pass, $booking);
+                    }
                     $booking->payment_status = 'refunded';
                 }
             }
