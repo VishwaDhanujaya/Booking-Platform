@@ -5,6 +5,7 @@ use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\InvoiceController;
 
 // Public Guest Routes
 Route::get('/', function () {
@@ -15,6 +16,7 @@ Route::get('/book', [PublicBookingController::class, 'index'])->name('booking.in
 Route::get('/booking/checkout', [PublicBookingController::class, 'checkout'])->name('booking.checkout');
 Route::post('/booking/checkout', [PublicBookingController::class, 'process'])->name('booking.process');
 Route::get('/booking/confirmation/{reference}', [PublicBookingController::class, 'confirmation'])->name('booking.confirmation');
+Route::get('/booking/invoice/{reference}', [InvoiceController::class, 'show'])->name('booking.invoice');
 
 Route::get('/pricing', function () {
     return view('pricing');
@@ -44,6 +46,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.bookings');
+    Route::get('/admin/bookings/{id}/invoice', [InvoiceController::class, 'showAdmin'])->name('admin.bookings.invoice');
     Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
     Route::get('/admin/customers', [AdminDashboardController::class, 'customers'])->name('admin.customers');
     Route::post('/admin/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow'])->name('admin.bookings.noshow');

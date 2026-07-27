@@ -120,18 +120,17 @@ class AdminDashboardController extends Controller
         return back()->with('status', "Booking {$booking->booking_reference} marked as No-Show. Customer attendance record updated.");
     }
 
-    public function markPaid(Request $request, int $id)
+    public function markPaid(Request $request, int $id, \App\Services\InvoiceService $invoiceService)
     {
         $booking = Booking::findOrFail($id);
-        $staffUser = Auth::user();
 
         $booking->payment_status = 'paid';
         $booking->paid_at = Carbon::now();
         $booking->save();
 
-        Log::info("[INVOICE GENERATION HOOK] Payment confirmed & Invoice ready for booking: {$booking->booking_reference}");
+        $invoice = $invoiceService->generateInvoice($booking);
 
-        return back()->with('status', "Booking {$booking->booking_reference} marked as Paid successfully.");
+        return back()->with('status', "Booking {$booking->booking_reference} marked as Paid. Invoice {$invoice->invoice_number} generated successfully.");
     }
 
     public function pricing(Request $request)

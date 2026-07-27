@@ -98,6 +98,9 @@
                                 <a href="{{ route('booking.confirmation', ['reference' => $b->booking_reference]) }}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors">
                                     Gate Pass
                                 </a>
+                                <a href="{{ route('admin.bookings.invoice', ['id' => $b->id]) }}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-300 bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-500/30 transition-colors">
+                                    Invoice
+                                </a>
                                 @if(in_array($b->payment_status, ['pending', 'unpaid', 'payment_pending']))
                                 <form action="{{ route('admin.bookings.mark-paid', ['id' => $b->id]) }}" method="POST">
                                     @csrf

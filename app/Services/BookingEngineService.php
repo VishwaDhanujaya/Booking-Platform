@@ -13,6 +13,7 @@ use App\Models\CustomerPass;
 use App\Models\PassLedgerEntry;
 use App\Services\PricingEngineService;
 use App\Services\CreditAndPassService;
+use App\Services\InvoiceService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,13 +23,16 @@ class BookingEngineService
 {
     protected PricingEngineService $pricingEngine;
     protected CreditAndPassService $creditAndPassService;
+    protected InvoiceService $invoiceService;
 
     public function __construct(
         ?PricingEngineService $pricingEngine = null,
-        ?CreditAndPassService $creditAndPassService = null
+        ?CreditAndPassService $creditAndPassService = null,
+        ?InvoiceService $invoiceService = null
     ) {
         $this->pricingEngine = $pricingEngine ?? new PricingEngineService();
         $this->creditAndPassService = $creditAndPassService ?? new CreditAndPassService();
+        $this->invoiceService = $invoiceService ?? new InvoiceService();
     }
 
     /**
@@ -137,6 +141,7 @@ class BookingEngineService
                 'total_amount' => max(0, $totalAmount),
                 'addons' => $addons,
                 'price_breakdown' => $priceCalculation['price_breakdown'],
+                'paid_at' => ($paymentStatus === 'paid') ? Carbon::now() : null,
             ]);
 
             // Deduct Credits if tender is credits
@@ -147,6 +152,11 @@ class BookingEngineService
             // Redeem Pass Unit if tender is customer pass
             if ($paymentMethod === 'pass' && $pass) {
                 $this->creditAndPassService->redeemPassUnit($pass, $booking);
+            }
+
+            // If paid immediately, generate invoice
+            if ($booking->payment_status === 'paid') {
+                $this->invoiceService->generateInvoice($booking);
             }
 
             // Mark time slots as booked

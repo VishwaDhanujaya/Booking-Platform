@@ -33,6 +33,7 @@ class Booking extends Model
         'addons',
         'cancellation_reason',
         'cancelled_at',
+        'paid_at',
     ];
 
     protected $casts = [
@@ -44,6 +45,7 @@ class Booking extends Model
         'tax_amount' => 'float',
         'total_amount' => 'float',
         'cancelled_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
     public function court()
@@ -54,6 +56,11 @@ class Booking extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
     }
 
     public function bookingAddOns()

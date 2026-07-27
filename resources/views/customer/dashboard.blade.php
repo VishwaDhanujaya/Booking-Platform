@@ -165,6 +165,12 @@
                                     View QR Gate Pass
                                 </button>
 
+                                <a href="{{ route('booking.invoice', ['reference' => $b->booking_reference]) }}" target="_blank" 
+                                   class="px-3.5 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Invoice
+                                </a>
+
                                 <form action="{{ route('customer.booking.cancel', ['id' => $b->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking reference ({{ $b->booking_reference }})?')">
                                     @csrf
                                     <button type="submit" class="px-3.5 py-2.5 rounded-xl font-semibold text-xs text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors">
