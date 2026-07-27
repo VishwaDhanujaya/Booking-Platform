@@ -146,7 +146,7 @@ class CreditAndPassService
                 throw new Exception("This customer pass expired on " . Carbon::parse($pass->expires_at)->format('Y-m-d'));
             }
 
-            $pass->decrement('remaining_units');
+            $pass->decrement('remaining_units', 1, []);
             if ($pass->remaining_units <= 0) {
                 $pass->update(['status' => 'exhausted']);
             }
@@ -168,7 +168,7 @@ class CreditAndPassService
     public function restorePassUnit(CustomerPass $pass, Booking $booking, string $reason = 'Restored due to booking cancellation'): PassLedgerEntry
     {
         return DB::transaction(function () use ($pass, $booking, $reason) {
-            $pass->increment('remaining_units');
+            $pass->increment('remaining_units', 1, []);
             if ($pass->status === 'exhausted') {
                 $pass->update(['status' => 'active']);
             }
