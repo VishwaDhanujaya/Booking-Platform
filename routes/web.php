@@ -54,12 +54,19 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
     Route::post('/admin/customers/{id}/issue-credits', [AdminDashboardController::class, 'issueCredits'])->name('admin.customers.issue-credits');
     Route::post('/admin/customers/{id}/issue-pass', [AdminDashboardController::class, 'issuePass'])->name('admin.customers.issue-pass');
     
-    // Manage Courts & Pricing Rules restricted to Owner & Manager
+    // Manage Courts, Pricing Rules, & Staff Members restricted to Owner & Manager
     Route::middleware('role:owner,manager')->group(function () {
         Route::post('/admin/courts', [AdminDashboardController::class, 'storeCourt'])->name('admin.courts.store');
+        Route::post('/admin/courts/{id}', [AdminDashboardController::class, 'updateCourt'])->name('admin.courts.update');
+        Route::delete('/admin/courts/{id}', [AdminDashboardController::class, 'deleteCourt'])->name('admin.courts.delete');
+        
         Route::get('/admin/pricing', [AdminDashboardController::class, 'pricing'])->name('admin.pricing');
         Route::post('/admin/pricing', [AdminDashboardController::class, 'storePricingRule'])->name('admin.pricing.store');
         Route::post('/admin/pricing/{id}/toggle', [AdminDashboardController::class, 'togglePricingRule'])->name('admin.pricing.toggle');
         Route::delete('/admin/pricing/{id}', [AdminDashboardController::class, 'deletePricingRule'])->name('admin.pricing.delete');
+
+        Route::get('/admin/staff', [AdminDashboardController::class, 'staff'])->name('admin.staff');
+        Route::post('/admin/staff', [AdminDashboardController::class, 'storeStaff'])->name('admin.staff.store');
+        Route::delete('/admin/staff/{id}', [AdminDashboardController::class, 'deleteStaff'])->name('admin.staff.delete');
     });
 });

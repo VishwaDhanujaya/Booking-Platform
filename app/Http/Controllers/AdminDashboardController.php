@@ -26,12 +26,16 @@ class AdminDashboardController extends Controller
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
         $today = Carbon::today()->toDateString();
 
+        $totalSlotsToday = TimeSlot::where('date', '=', $today, 'and')->count();
+        $bookedSlotsToday = TimeSlot::where('date', '=', $today, 'and')->where('status', '=', 'booked', 'and')->count();
+        $occupancyRate = ($totalSlotsToday > 0) ? round(($bookedSlotsToday / $totalSlotsToday) * 100) : 0;
+
         $stats = [
             'bookings_today' => Booking::where('booking_date', '=', $today, 'and')->count(),
             'weekly_revenue' => Booking::where('payment_status', '=', 'paid', 'and')
                 ->where('booking_date', '>=', Carbon::today()->subDays(7)->toDateString(), 'and')
                 ->sum('total_amount'),
-            'occupancy_rate' => 78,
+            'occupancy_rate' => $occupancyRate,
             'active_members' => User::where('role', '=', 'customer', 'and')->count(),
         ];
 
@@ -108,6 +112,35 @@ class AdminDashboardController extends Controller
         ]);
 
         return redirect()->route('admin.courts')->with('status', 'New court resource created successfully!');
+    }
+
+    public function updateCourt(Request $request, int $id)
+    {
+        $court = Court::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'hourly_rate' => ['required', 'numeric', 'min:0'],
+            'peak_hourly_rate' => ['nullable', 'numeric', 'min:0'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $court->update([
+            'name' => $validated['name'],
+            'hourly_rate' => $validated['hourly_rate'],
+            'peak_hourly_rate' => $validated['peak_hourly_rate'] ?? ($validated['hourly_rate'] * 1.25),
+            'is_active' => $validated['is_active'],
+        ]);
+
+        return redirect()->route('admin.courts')->with('status', "Court {$court->name} updated successfully.");
+    }
+
+    public function deleteCourt(int $id)
+    {
+        $court = Court::findOrFail($id);
+        $court->delete();
+
+        return redirect()->route('admin.courts')->with('status', 'Court deleted successfully.');
     }
 
     public function markNoShow(Request $request, int $id, BookingEngineService $bookingEngine)
@@ -248,5 +281,50 @@ class AdminDashboardController extends Controller
         );
 
         return back()->with('status', "Issued {$validated['pass_name']} ({$validated['total_units']} units) to {$customer->name} successfully.");
+    }
+
+    public function staff(Request $request)
+    {
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
+        $staffMembers = User::whereIn('role', ['owner', 'manager', 'trainer_staff', 'front_desk'], 'and')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.staff', compact('tenant', 'staffMembers'));
+    }
+
+    public function storeStaff(Request $request)
+    {
+        $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'role' => ['required', 'string', 'in:owner,manager,trainer_staff,front_desk'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        User::create([
+            'tenant_id' => $tenant->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        Log::info("[STAFF INVITATION LOG] Staff account created for {$validated['name']} ({$validated['email']}) with role {$validated['role']}.");
+
+        return redirect()->route('admin.staff')->with('status', "Staff account for {$validated['name']} created successfully.");
+    }
+
+    public function deleteStaff(int $id)
+    {
+        $staffUser = User::findOrFail($id);
+        if ($staffUser->id === Auth::id()) {
+            return back()->with('error', "You cannot remove your own active staff account.");
+        }
+        $staffUser->delete();
+
+        return redirect()->route('admin.staff')->with('status', "Staff account removed.");
     }
 }
