@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\TenantRegistrationController;
 
 // Public Guest Routes
 Route::get('/', function () {
@@ -28,6 +29,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.perform');
+    Route::get('/register-business', [TenantRegistrationController::class, 'showRegisterForm'])->name('tenant.register');
+    Route::post('/register-business', [TenantRegistrationController::class, 'register'])->name('tenant.register.perform');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('/reset-password', [AuthController::class, 'showLogin'])->name('password.reset');
 });

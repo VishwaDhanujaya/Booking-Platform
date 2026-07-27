@@ -79,6 +79,17 @@ class TenantResolver
     }
 
     /**
+     * Set active tenant by slug.
+     */
+    public static function setActiveTenant(string $slug): void
+    {
+        $tenant = Tenant::where('slug', '=', $slug, 'and')->first(['*']);
+        if ($tenant) {
+            static::setActiveTenantContext($tenant);
+        }
+    }
+
+    /**
      * Get active tenant model instance.
      */
     public static function getActiveTenantModel(): ?Tenant

@@ -119,6 +119,9 @@
                     <a href="{{ route('pricing') }}" class="text-sm font-semibold {{ request()->routeIs('pricing') ? 'text-slate-900 font-bold' : 'text-slate-600 hover:text-slate-900' }} transition-colors">
                         Pricing & Membership
                     </a>
+                    <a href="{{ route('tenant.register') }}" class="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors">
+                        Start Free Trial &rarr;
+                    </a>
                     @auth
                         <a href="{{ route('customer.my-bookings') }}" class="text-sm font-semibold {{ request()->routeIs('customer.*') ? 'text-slate-900 font-bold' : 'text-slate-600 hover:text-slate-900' }} transition-colors">
                             My Account
