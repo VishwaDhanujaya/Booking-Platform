@@ -35,6 +35,7 @@ return new class extends Migration
             $table->json('addons')->nullable();
             $table->text('cancellation_reason')->nullable();
             $table->timestamp('cancelled_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
     }

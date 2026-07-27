@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Tenant;
 use App\Models\SportCategory;
 use App\Models\Court;
@@ -117,6 +118,20 @@ class AdminDashboardController extends Controller
         $bookingEngine->markNoShow($booking, $staffUser, $request->input('notes'));
 
         return back()->with('status', "Booking {$booking->booking_reference} marked as No-Show. Customer attendance record updated.");
+    }
+
+    public function markPaid(Request $request, int $id)
+    {
+        $booking = Booking::findOrFail($id);
+        $staffUser = Auth::user();
+
+        $booking->payment_status = 'paid';
+        $booking->paid_at = Carbon::now();
+        $booking->save();
+
+        Log::info("[INVOICE GENERATION HOOK] Payment confirmed & Invoice ready for booking: {$booking->booking_reference}");
+
+        return back()->with('status', "Booking {$booking->booking_reference} marked as Paid successfully.");
     }
 
     public function pricing(Request $request)

@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
     Route::get('/admin/courts', [AdminDashboardController::class, 'courts'])->name('admin.courts');
     Route::get('/admin/customers', [AdminDashboardController::class, 'customers'])->name('admin.customers');
     Route::post('/admin/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow'])->name('admin.bookings.noshow');
+    Route::post('/admin/bookings/{id}/mark-paid', [AdminDashboardController::class, 'markPaid'])->name('admin.bookings.mark-paid');
     Route::post('/admin/customers/{id}/issue-credits', [AdminDashboardController::class, 'issueCredits'])->name('admin.customers.issue-credits');
     Route::post('/admin/customers/{id}/issue-pass', [AdminDashboardController::class, 'issuePass'])->name('admin.customers.issue-pass');
     

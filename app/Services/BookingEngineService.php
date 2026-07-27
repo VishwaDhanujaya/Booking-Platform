@@ -128,7 +128,7 @@ class BookingEngineService
                 'customer_name' => $user->name,
                 'customer_email' => $user->email,
                 'customer_phone' => $user->phone,
-                'status' => ($paymentMethod === 'bank_transfer') ? 'payment_pending' : 'confirmed',
+                'status' => 'confirmed',
                 'payment_status' => $paymentStatus,
                 'payment_method' => $paymentMethod,
                 'base_amount' => $baseCourtPrice,

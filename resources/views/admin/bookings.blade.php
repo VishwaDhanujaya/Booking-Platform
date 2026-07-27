@@ -98,6 +98,14 @@
                                 <a href="{{ route('booking.confirmation', ['reference' => $b->booking_reference]) }}" target="_blank" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors">
                                     Gate Pass
                                 </a>
+                                @if(in_array($b->payment_status, ['pending', 'unpaid', 'payment_pending']))
+                                <form action="{{ route('admin.bookings.mark-paid', ['id' => $b->id]) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-300 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 transition-colors">
+                                        Mark Paid
+                                    </button>
+                                </form>
+                                @endif
                                 @if($b->status !== 'cancelled')
                                 <form action="{{ route('customer.booking.cancel', ['id' => $b->id]) }}" method="POST" onsubmit="return confirm('Cancel booking reference {{ $b->booking_reference }}?')">
                                     @csrf
