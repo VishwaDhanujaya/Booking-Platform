@@ -286,7 +286,7 @@ class AdminDashboardController extends Controller
     public function staff(Request $request)
     {
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first(['*']);
-        $staffMembers = User::whereIn('role', ['owner', 'manager', 'trainer_staff', 'front_desk'], 'and')
+        $staffMembers = User::whereIn('role', ['owner', 'manager', 'trainer_staff', 'front_desk'], 'and', false)
             ->orderBy('id', 'desc')
             ->get();
 

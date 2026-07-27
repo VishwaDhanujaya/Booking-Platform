@@ -60,7 +60,7 @@ class AdminCrudTest extends TestCase
         $response3 = $this->actingAs($owner)->delete(route('admin.courts.delete', ['id' => $court->id]));
         $response3->assertRedirect(route('admin.courts'));
 
-        $this->assertNull(Court::find($court->id));
+        $this->assertNull(Court::find($court->id, ['*']));
     }
 
     public function test_front_desk_cannot_manage_staff_accounts(): void
