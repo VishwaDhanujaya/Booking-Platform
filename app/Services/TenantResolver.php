@@ -82,6 +82,22 @@ class TenantResolver
     }
 
     /**
+     * Generate clean path-based tenant URL (e.g. /apex-sports-arena/book)
+     */
+    public static function tenantUrl(string $path = '', ?Tenant $tenant = null): string
+    {
+        $activeTenant = $tenant ?? static::getActiveTenantModel();
+        $slug = $activeTenant?->slug;
+        $path = ltrim($path, '/');
+
+        if ($slug) {
+            return url('/' . $slug . ($path ? '/' . $path : ''));
+        }
+
+        return url('/' . $path);
+    }
+
+    /**
      * Store resolved tenant into session, container singleton, and view scope.
      */
     public static function setActiveTenantContext(Tenant $tenant): void
