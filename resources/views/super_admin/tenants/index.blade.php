@@ -35,9 +35,9 @@
                     <select name="plan" onchange="this.form.submit()"
                             class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
                         <option value="all">All Plans</option>
-                        <option value="starter" {{ request('plan') === 'starter' ? 'selected' : '' }}>Starter ($49/mo)</option>
-                        <option value="pro" {{ request('plan') === 'pro' ? 'selected' : '' }}>Pro ($99/mo)</option>
-                        <option value="enterprise" {{ request('plan') === 'enterprise' ? 'selected' : '' }}>Enterprise</option>
+                        <option value="starter" {{ request('plan') === 'starter' ? 'selected' : '' }}>Starter Tier (LKR 15,000/mo)</option>
+                        <option value="pro" {{ request('plan') === 'pro' ? 'selected' : '' }}>Pro Tier (LKR 35,000/mo)</option>
+                        <option value="enterprise" {{ request('plan') === 'enterprise' ? 'selected' : '' }}>Enterprise Plan (LKR 75,000/mo)</option>
                     </select>
                 </div>
 

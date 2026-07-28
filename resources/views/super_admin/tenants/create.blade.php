@@ -1,6 +1,14 @@
 <x-layouts.super_admin title="Provision Tenant | SLTDS Super Admin">
 
-    <div class="max-w-3xl mx-auto space-y-8">
+    <div class="max-w-3xl mx-auto space-y-8" x-data="{
+        name: '{{ old('name', '') }}',
+        slug: '{{ old('slug', '') }}',
+        generateSlug() {
+            if (!this.slug || this.slug === '') {
+                this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            }
+        }
+    }">
 
         <!-- Header -->
         <div class="flex items-center justify-between">
@@ -35,9 +43,9 @@
                         <!-- Facility Name -->
                         <div>
                             <label for="name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Facility Name *</label>
-                            <input type="text" id="name" name="name" required value="{{ old('name') }}"
+                            <input type="text" id="name" name="name" x-model="name" @input="generateSlug()" required
                                    placeholder="e.g. Kandy Badminton Hub"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-medium">
                             @error('name')
                                 <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
                             @enderror
@@ -46,9 +54,10 @@
                         <!-- Subdomain / Slug -->
                         <div>
                             <label for="slug" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Subdomain / Slug *</label>
-                            <input type="text" id="slug" name="slug" required value="{{ old('slug') }}"
+                            <input type="text" id="slug" name="slug" x-model="slug" required
                                    placeholder="e.g. kandy-badminton"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-mono">
+                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-mono font-bold">
+                            <p class="text-[10px] text-slate-400 mt-1">Tenant URL will be: <code x-text="(slug || 'slug') + '.localhost'"></code></p>
                             @error('slug')
                                 <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
                             @enderror
@@ -60,7 +69,7 @@
                         <div>
                             <label for="category" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Category Tag *</label>
                             <select id="category" name="category" required
-                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-semibold">
                                 <option value="Sports Venues & Facilities">Sports Venues & Facilities</option>
                                 <option value="Group Classes & Courses">Group Classes & Courses</option>
                                 <option value="Fitness Equipment">Fitness Equipment & Gyms</option>
@@ -72,10 +81,10 @@
                         <div>
                             <label for="subscription_plan" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">SaaS Subscription Plan *</label>
                             <select id="subscription_plan" name="subscription_plan" required
-                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
-                                <option value="pro" selected>Pro Tier ($99/month)</option>
-                                <option value="starter">Starter Tier ($49/month)</option>
-                                <option value="enterprise">Enterprise Plan</option>
+                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-semibold">
+                                <option value="pro" selected>Pro Tier (LKR 35,000/month)</option>
+                                <option value="starter">Starter Tier (LKR 15,000/month)</option>
+                                <option value="enterprise">Enterprise Plan (LKR 75,000/month)</option>
                             </select>
                         </div>
                     </div>
@@ -86,7 +95,7 @@
                             <label for="tagline" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Tagline</label>
                             <input type="text" id="tagline" name="tagline" value="{{ old('tagline') }}"
                                    placeholder="e.g. Premier Indoor Badminton Courts in Kandy"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-medium">
                         </div>
 
                         <!-- Brand Color -->
@@ -100,8 +109,8 @@
                     <!-- Directory Public Toggle -->
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div>
-                            <div class="text-xs font-bold text-slate-900">Publish to Stage 1 Customer Directory</div>
-                            <div class="text-[11px] text-slate-500">Make this tenant visible on the public SLTDS showcase directory.</div>
+                            <div class="text-xs font-bold text-slate-900">Publish to Public Customer Directory</div>
+                            <div class="text-[11px] text-slate-500">Make this tenant visible on the public showcase directory.</div>
                         </div>
                         <input type="checkbox" name="is_public" value="1" checked class="w-5 h-5 accent-sltds-endeavour rounded">
                     </div>
@@ -120,7 +129,7 @@
                             <label for="owner_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Owner Full Name *</label>
                             <input type="text" id="owner_name" name="owner_name" required value="{{ old('owner_name') }}"
                                    placeholder="e.g. Kasun Jayawardena"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-medium">
                             @error('owner_name')
                                 <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
                             @enderror
@@ -131,7 +140,7 @@
                             <label for="owner_email" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Owner Work Email *</label>
                             <input type="email" id="owner_email" name="owner_email" required value="{{ old('owner_email') }}"
                                    placeholder="e.g. owner@kandybadminton.lk"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour font-medium">
                             @error('owner_email')
                                 <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
                             @enderror
@@ -141,9 +150,9 @@
                     <!-- Owner Password -->
                     <div>
                         <label for="owner_password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Initial Password *</label>
-                        <input type="text" id="owner_password" name="owner_password" required value="password"
-                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:bg-white focus:border-sltds-endeavour">
-                        <p class="text-[10px] text-slate-500 mt-1">Default temporary password set to <code>password</code>. The user can change this after first login.</p>
+                        <input type="text" id="owner_password" name="owner_password" required value="password123"
+                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs font-mono font-bold focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                        <p class="text-[10px] text-slate-500 mt-1">Default temporary password set to <code>password123</code>. The owner can change this in their settings.</p>
                         @error('owner_password')
                             <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
                         @enderror

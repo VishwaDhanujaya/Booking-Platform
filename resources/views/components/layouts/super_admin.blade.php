@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'BookFlow Platform Super-Admin' }}</title>
+    <title>{{ $title ?? 'SLTDS Platform Super-Admin' }}</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,22 +12,30 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
+<body x-data="{ mobileMenuOpen: false }" class="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
 
     <!-- Top SLTDS Announcement / Status Bar -->
     <div class="bg-sltds-endeavour py-2 px-4 text-center text-xs font-semibold text-white tracking-wide shadow-xs border-b border-sltds-sky/30">
-        <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-sltds-green text-white shadow-xs">INTERNAL</span>
-            <span>BookFlow Platform Staff Super-Admin Management Area</span>
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-sltds-green text-white shadow-xs">SLT DIGITAL SERVICES</span>
+                <span class="hidden sm:inline">Platform Super-Admin Central Command</span>
+            </div>
+            <div class="text-[11px] font-mono text-sltds-sky">
+                Confidential Staff Control Panel
+            </div>
         </div>
     </div>
 
     @if(session('is_impersonating'))
-        <div class="bg-amber-400 text-slate-950 py-2 px-4 text-xs font-bold tracking-wide shadow-xs border-b border-amber-300">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <span>⚠️ Currently impersonating <strong>{{ session('impersonated_tenant_name') }}</strong> as {{ Auth::user()->name }}</span>
-                <a href="{{ route('superadmin.stop-impersonating') }}" class="px-3 py-1 rounded-lg bg-slate-950 text-amber-300 text-[11px] font-extrabold hover:bg-black">
-                    Exit Impersonation Mode
+        <div class="bg-amber-400 text-slate-950 py-2.5 px-4 text-xs font-bold tracking-wide shadow-md border-b border-amber-300">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-[10px] uppercase font-black">IMPERSONATION ACTIVE</span>
+                    <span>Currently viewing <strong>{{ session('impersonated_tenant_name') }}</strong> portal</span>
+                </div>
+                <a href="{{ route('superadmin.stop-impersonating') }}" class="px-3.5 py-1.5 rounded-xl bg-slate-950 text-white hover:bg-black text-xs font-extrabold transition-all shadow-xs flex items-center gap-1.5 shrink-0">
+                    ← Return to Platform Super-Admin
                 </a>
             </div>
         </div>
@@ -41,43 +49,75 @@
                 <!-- Left Brand -->
                 <div class="flex items-center gap-3">
                     <a href="{{ route('superadmin.dashboard') }}" class="flex items-center gap-3 group">
-                        <img src="/images/logo.png" alt="BookFlow Logo" class="h-10 w-auto object-contain group-hover:scale-105 transition-transform">
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-blue-50 text-sltds-endeavour border border-sltds-sky/30">SUPER-ADMIN</span>
+                        <img src="/images/sltmobitel.png" alt="SLT Digital Services" class="h-8 w-auto object-contain group-hover:scale-105 transition-transform">
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase bg-blue-50 text-sltds-endeavour border border-sltds-sky/30">SUPER-ADMIN</span>
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
+                <!-- Desktop Navigation Links -->
                 <nav class="hidden md:flex items-center gap-1 text-xs font-bold text-slate-700">
-                    <a href="{{ route('superadmin.dashboard') }}" class="px-3 py-1.5 rounded-xl transition-all {{ request()->routeIs('superadmin.dashboard') ? 'text-sltds-endeavour font-black bg-blue-50 border border-blue-100' : 'hover:text-sltds-endeavour hover:bg-slate-100/70' }}">
+                    <a href="{{ route('superadmin.dashboard') }}" class="px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('superadmin.dashboard') ? 'text-sltds-endeavour font-black bg-blue-50 border border-blue-200' : 'hover:text-sltds-endeavour hover:bg-slate-100' }}">
                         Dashboard
                     </a>
-                    <a href="{{ route('superadmin.tenants') }}" class="px-3 py-1.5 rounded-xl transition-all {{ request()->routeIs('superadmin.tenants*') ? 'text-sltds-endeavour font-black bg-blue-50 border border-blue-100' : 'hover:text-sltds-endeavour hover:bg-slate-100/70' }}">
+                    <a href="{{ route('superadmin.tenants') }}" class="px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('superadmin.tenants*') && !request()->routeIs('superadmin.tenants.create') ? 'text-sltds-endeavour font-black bg-blue-50 border border-blue-200' : 'hover:text-sltds-endeavour hover:bg-slate-100' }}">
                         Tenant Directory
                     </a>
-                    <a href="{{ route('superadmin.tenants.create') }}" class="px-3 py-1.5 rounded-xl text-sltds-endeavour bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all font-extrabold">
+                    <a href="{{ route('superadmin.tenants.create') }}" class="px-3.5 py-2 rounded-xl text-sltds-endeavour bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all font-extrabold">
                         + Provision Tenant
                     </a>
-                    <a href="{{ route('parent.home') }}" target="_blank" class="px-3 py-1.5 rounded-xl text-slate-500 hover:text-sltds-endeavour transition-colors">
+                    <a href="{{ route('parent.home') }}" target="_blank" class="px-3.5 py-2 rounded-xl text-slate-500 hover:text-sltds-endeavour transition-colors">
                         Parent Site &rarr;
                     </a>
                 </nav>
 
-                <!-- Right Profile & Sign Out -->
+                <!-- Right Profile & Mobile Toggle -->
                 <div class="flex items-center gap-3 text-xs font-semibold">
                     <div class="text-right hidden sm:block">
-                        <div class="text-slate-900 font-bold">{{ Auth::user()->name ?? 'Platform Admin' }}</div>
+                        <div class="text-slate-900 font-bold">{{ Auth::user()->name ?? 'Platform Staff' }}</div>
                         <div class="text-slate-500 text-[10px] font-mono">{{ Auth::user()->email ?? 'superadmin@sltdigital.com' }}</div>
                     </div>
 
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                    <form action="{{ route('logout') }}" method="POST" class="hidden sm:inline">
                         @csrf
                         <button type="submit" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors">
                             Sign Out
                         </button>
                     </form>
+
+                    <!-- Mobile Menu Toggle Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
                 </div>
 
             </div>
+
+            <!-- Mobile Navigation Drawer -->
+            <div x-show="mobileMenuOpen" x-cloak class="md:hidden py-3 border-t border-slate-100 space-y-2 text-xs font-bold">
+                <a href="{{ route('superadmin.dashboard') }}" class="block px-4 py-2.5 rounded-xl text-slate-900 hover:bg-slate-100">
+                    Dashboard Overview
+                </a>
+                <a href="{{ route('superadmin.tenants') }}" class="block px-4 py-2.5 rounded-xl text-slate-900 hover:bg-slate-100">
+                    Tenant Directory
+                </a>
+                <a href="{{ route('superadmin.tenants.create') }}" class="block px-4 py-2.5 rounded-xl text-sltds-endeavour bg-blue-50 font-extrabold">
+                    + Provision New Tenant
+                </a>
+                <a href="{{ route('parent.home') }}" target="_blank" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100">
+                    Parent Marketing Site ↗
+                </a>
+                <div class="pt-2 border-t border-slate-100">
+                    <form action="{{ route('logout') }}" method="POST" class="w-full">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-left font-bold text-rose-700 bg-rose-50 hover:bg-rose-100">
+                            Sign Out
+                        </button>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </header>
 
@@ -91,7 +131,7 @@
                     </svg>
                     <span>{{ session('status') }}</span>
                 </div>
-                <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-900 font-black text-sm">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-900 font-black text-sm cursor-pointer">✕</button>
             </div>
         @endif
 
@@ -103,7 +143,7 @@
                     </svg>
                     <span>{{ session('error') }}</span>
                 </div>
-                <button onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-900 font-black text-sm">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-900 font-black text-sm cursor-pointer">✕</button>
             </div>
         @endif
 
@@ -125,7 +165,7 @@
     </div>
 
     <!-- Main Content Slot -->
-    <main class="grow py-10">
+    <main class="grow py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{ $slot }}
         </div>

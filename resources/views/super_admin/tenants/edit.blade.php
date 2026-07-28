@@ -58,9 +58,9 @@
                         <label for="subscription_plan" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">SaaS Subscription Plan *</label>
                         <select id="subscription_plan" name="subscription_plan" required
                                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
-                            <option value="starter" {{ $tenant->subscription_plan === 'starter' ? 'selected' : '' }}>Starter ($49/month)</option>
-                            <option value="pro" {{ $tenant->subscription_plan === 'pro' ? 'selected' : '' }}>Pro ($99/month)</option>
-                            <option value="enterprise" {{ $tenant->subscription_plan === 'enterprise' ? 'selected' : '' }}>Enterprise Plan</option>
+                            <option value="starter" {{ $tenant->subscription_plan === 'starter' ? 'selected' : '' }}>Starter Tier (LKR 15,000/month)</option>
+                            <option value="pro" {{ $tenant->subscription_plan === 'pro' ? 'selected' : '' }}>Pro Tier (LKR 35,000/month)</option>
+                            <option value="enterprise" {{ $tenant->subscription_plan === 'enterprise' ? 'selected' : '' }}>Enterprise Plan (LKR 75,000/month)</option>
                         </select>
                     </div>
                 </div>
