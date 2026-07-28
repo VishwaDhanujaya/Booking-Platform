@@ -109,7 +109,7 @@ class SuperAdminPanelTest extends TestCase
 
         $response = $this->actingAs($superAdmin)->post("/platform-admin/tenants/{$tenant->id}/impersonate");
 
-        $response->assertRedirect('/admin?tenant=' . $tenant->slug);
+        $response->assertRedirect('/' . $tenant->slug . '/admin');
         $this->assertDatabaseHas('impersonation_logs', [
             'super_admin_id' => $superAdmin->id,
             'tenant_id' => $tenant->id,

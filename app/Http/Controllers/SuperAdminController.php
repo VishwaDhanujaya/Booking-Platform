@@ -307,7 +307,7 @@ class SuperAdminController extends Controller
         // Authenticate as target tenant user
         Auth::login($targetUser);
 
-        return redirect()->route('admin.dashboard', ['tenant' => $tenant->slug])
+        return redirect('/' . $tenant->slug . '/admin')
             ->with('status', "Impersonation Active: Logged in as {$targetUser->name} ({$targetUser->role}) for {$tenant->name}. Audit log recorded.");
     }
 

@@ -64,7 +64,7 @@
                 <select onchange="window.location.href = this.value" 
                         class="bg-slate-900 text-white text-xs font-bold py-1 px-3 rounded-xl border border-slate-700">
                     @foreach($allTenants as $t)
-                        <option value="{{ request()->fullUrlWithQuery(['tenant' => $t->slug]) }}" {{ $tenantSlug === $t->slug ? 'selected' : '' }}>
+                        <option value="{{ url('/' . $t->slug . '/book') }}" {{ $tenantSlug === $t->slug ? 'selected' : '' }}>
                             {{ $t->name }} ({{ $t->slug }})
                         </option>
                     @endforeach

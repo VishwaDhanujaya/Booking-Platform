@@ -84,10 +84,12 @@ class AuthController extends Controller
 
         Log::info("User logged in successfully: {$user->email} [Role: {$user->role}]");
 
-        // 5. Role-based redirect
         if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'platform_admin'])) {
             $tenantSlug = $user->tenant?->slug ?? session('active_tenant_slug');
-            return redirect()->route('admin.dashboard', $tenantSlug ? ['tenant' => $tenantSlug] : []);
+            if ($tenantSlug) {
+                return redirect('/' . $tenantSlug . '/admin');
+            }
+            return redirect()->route('admin.dashboard');
         }
 
         return redirect()->route('customer.my-bookings');
