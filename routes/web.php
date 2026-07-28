@@ -42,10 +42,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureSuperAdmin::class])->prefi
     Route::post('/tenants/{id}/update', [\App\Http\Controllers\SuperAdminController::class, 'updateTenant'])->name('superadmin.tenants.update');
     Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\SuperAdminController::class, 'toggleStatus'])->name('superadmin.tenants.toggle-status');
     Route::post('/tenants/{id}/toggle-public', [\App\Http\Controllers\SuperAdminController::class, 'togglePublic'])->name('superadmin.tenants.toggle-public');
-    Route::post('/tenants/{id}/impersonate', [\App\Http\Controllers\SuperAdminController::class, 'impersonate'])->name('superadmin.tenants.impersonate');
+    Route::get('/tenants/{id}/users', [\App\Http\Controllers\SuperAdminController::class, 'tenantUsers'])->name('superadmin.tenants.users');
+    Route::post('/tenants/{id}/users', [\App\Http\Controllers\SuperAdminController::class, 'storeTenantUser'])->name('superadmin.tenants.users.store');
+    Route::delete('/tenants/{tenantId}/users/{userId}', [\App\Http\Controllers\SuperAdminController::class, 'deleteTenantUser'])->name('superadmin.tenants.users.delete');
 });
-
-Route::middleware('auth')->match(['get', 'post'], '/platform-admin/stop-impersonating', [\App\Http\Controllers\SuperAdminController::class, 'stopImpersonating'])->name('superadmin.stop-impersonating');
 
 /*
 |--------------------------------------------------------------------------

@@ -22,10 +22,6 @@ class EnsureSuperAdmin
                 return response()->json(['error' => 'Platform Super-Admin privileges required.'], 403);
             }
 
-            if (session('is_impersonating')) {
-                return redirect()->route('admin.dashboard')->with('error', 'Platform Admin panel is restricted while tenant impersonation is active. Please exit impersonation first.');
-            }
-
             abort(403, 'Unauthorized Access: Platform Super-Admin privileges required to access SLTDS Super Admin panel.');
         }
 

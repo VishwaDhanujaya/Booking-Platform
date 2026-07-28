@@ -31,17 +31,7 @@
 </head>
 <body x-data="{ sidebarOpen: false }" class="h-full font-sans text-slate-800 bg-slate-50 flex flex-col overflow-hidden">
 
-    @if(session('is_impersonating') || (auth()->check() && auth()->user()->isSuperAdmin()))
-        <div class="bg-amber-400 text-slate-950 px-5 py-2.5 text-xs font-bold flex items-center justify-between gap-4 z-50 shadow-md">
-            <div class="flex items-center gap-2">
-                <span class="bg-slate-950 text-amber-300 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black tracking-wider">SUPER-ADMIN IMPERSONATION</span>
-                <span>Logged in as <strong>{{ Auth::user()->name }}</strong> ({{ Auth::user()->email }}) for <u>{{ $tenantName }}</u>. Audit log recorded.</span>
-            </div>
-            <a href="{{ route('superadmin.stop-impersonating') }}" class="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-black text-white font-extrabold text-xs transition-all shadow-xs shrink-0 flex items-center gap-1.5">
-                ← Return to Platform Super-Admin
-            </a>
-        </div>
-    @endif
+
 
     <div class="flex-1 flex overflow-hidden">
 
@@ -157,11 +147,6 @@
 
         <!-- Footer links -->
         <div class="p-3.5 border-t border-slate-100 space-y-2">
-            @if(session('is_impersonating') || (auth()->check() && auth()->user()->isSuperAdmin()))
-                <a href="{{ route('superadmin.stop-impersonating') }}" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-500 transition-colors shadow-xs">
-                    ← Return to Super-Admin
-                </a>
-            @endif
             <a href="{{ route('booking.index') }}" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
                 View Venue Site ↗
             </a>

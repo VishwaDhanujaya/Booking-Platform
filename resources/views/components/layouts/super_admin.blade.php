@@ -27,20 +27,6 @@
         </div>
     </div>
 
-    @if(session('is_impersonating'))
-        <div class="bg-amber-400 text-slate-950 py-2.5 px-4 text-xs font-bold tracking-wide shadow-md border-b border-amber-300">
-            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-[10px] uppercase font-black">IMPERSONATION ACTIVE</span>
-                    <span>Currently viewing <strong>{{ session('impersonated_tenant_name') }}</strong> portal</span>
-                </div>
-                <a href="{{ route('superadmin.stop-impersonating') }}" class="px-3.5 py-1.5 rounded-xl bg-slate-950 text-white hover:bg-black text-xs font-extrabold transition-all shadow-xs flex items-center gap-1.5 shrink-0">
-                    ← Return to Platform Super-Admin
-                </a>
-            </div>
-        </div>
-    @endif
-
     <!-- Super Admin Header Bar -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -7,7 +7,6 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Booking;
-use App\Models\ImpersonationLog;
 use App\Services\TenantResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +32,8 @@ class SuperAdminController extends Controller
 
         $recentTenants = Tenant::orderBy('created_at', 'desc')->limit(5)->get(['*']);
 
-        $recentImpersonations = ImpersonationLog::with(['superAdmin', 'tenant', 'impersonatedUser'])
+        $recentUsers = User::withoutGlobalScopes()
+            ->with('tenant')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get(['*']);
@@ -45,7 +45,7 @@ class SuperAdminController extends Controller
             'totalBookingsThisWeek',
             'signupsThisMonth',
             'recentTenants',
-            'recentImpersonations'
+            'recentUsers'
         ));
     }
 
@@ -233,36 +233,47 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * Log In As (Impersonate Tenant Owner) with Audit Log Entry
+     * Manage Users for a Specific Tenant Facility (Super-Admin Direct View)
      */
-    public function impersonate(Request $request, int $id)
+    public function tenantUsers(int $id)
     {
-        /** @var \App\Models\User $superAdminUser */
-        $superAdminUser = Auth::user();
+        $tenant = Tenant::findOrFail($id);
+        $users = User::withoutGlobalScopes()
+            ->where('tenant_id', '=', $tenant->id, 'and')
+            ->orderBy('id', 'desc')
+            ->get(['*']);
 
-        if (!$superAdminUser || !$superAdminUser->isSuperAdmin()) {
-            abort(403, 'Unauthorized Access: Only genuine Platform Super-Admins can initiate tenant impersonation.');
-        }
+        return view('super_admin.tenants.users', compact('tenant', 'users'));
+    }
 
+    /**
+     * Store/Create User for a Specific Tenant
+     */
+    public function storeTenantUser(Request $request, int $id)
+    {
         $tenant = Tenant::findOrFail($id);
 
-        // Find Owner or Manager of target tenant without global tenant scope
-        $targetUser = User::withoutGlobalScopes()
-            ->where('tenant_id', '=', $tenant->id, 'and')
-            ->whereIn('role', ['owner', 'manager'], 'and', false)
-            ->first();
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'role' => ['required', 'string', 'in:owner,manager,trainer_staff,front_desk,customer'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
 
-        if (!$targetUser) {
-            $targetUser = User::withoutGlobalScopes()
-                ->where('tenant_id', '=', $tenant->id, 'and')
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        if (in_array($validated['role'], ['owner', 'manager', 'trainer_staff', 'front_desk'])) {
+            $roleModel = Role::where('tenant_id', '=', $tenant->id, 'and')
+                ->where('slug', '=', $validated['role'], 'and')
                 ->first();
-        }
-
-        if (!$targetUser) {
-            // Auto-provision Owner Account for this tenant on demand so impersonation never fails
-            $ownerRole = Role::where('tenant_id', '=', $tenant->id, 'and')->where('slug', '=', 'owner', 'and')->first();
-            if (!$ownerRole) {
-                $ownerRole = Role::create([
+            if (!$roleModel && $validated['role'] === 'owner') {
+                $roleModel = Role::create([
                     'tenant_id' => $tenant->id,
                     'name' => 'Owner',
                     'slug' => 'owner',
@@ -270,79 +281,33 @@ class SuperAdminController extends Controller
                     'permissions' => ['all' => true],
                 ]);
             }
-
-            $targetUser = User::create([
-                'tenant_id' => $tenant->id,
-                'name' => $tenant->name . ' Owner',
-                'email' => 'owner@' . $tenant->slug . '.lk',
-                'password' => bcrypt('password123'),
-                'role' => 'owner',
-                'is_super_admin' => false,
-            ]);
-
-            $targetUser->roles()->attach($ownerRole);
+            if ($roleModel) {
+                $user->roles()->attach($roleModel);
+            }
         }
 
-        // Write Audit Log Entry
-        ImpersonationLog::create([
-            'super_admin_id' => $superAdminUser->id,
-            'tenant_id' => $tenant->id,
-            'impersonated_user_id' => $targetUser->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        // Save impersonation state in session
-        session([
-            'is_impersonating' => true,
-            'original_super_admin_id' => $superAdminUser->id,
-            'original_super_admin_name' => $superAdminUser->name,
-            'impersonated_tenant_name' => $tenant->name,
-            'impersonated_tenant_id' => $tenant->id,
-        ]);
-
-        // Set active tenant context
-        TenantResolver::setActiveTenantContext($tenant);
-
-        // Authenticate as target tenant user
-        Auth::login($targetUser);
-
-        return redirect('/' . $tenant->slug . '/admin')
-            ->with('status', "Impersonation Active: Logged in as {$targetUser->name} ({$targetUser->role}) for {$tenant->name}. Audit log recorded.");
+        return redirect()->route('superadmin.tenants.users', $tenant->id)
+            ->with('status', "User account for {$validated['name']} ({$validated['role']}) created successfully for {$tenant->name}.");
     }
 
     /**
-     * Stop Impersonating & Return to Super Admin Panel
+     * Delete User Account for a Specific Tenant
      */
-    public function stopImpersonating(Request $request)
+    public function deleteTenantUser(int $tenantId, int $userId)
     {
-        $originalSuperAdminId = session('original_super_admin_id');
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = User::withoutGlobalScopes()
+            ->where('tenant_id', '=', $tenant->id, 'and')
+            ->findOrFail($userId);
 
-        if ($originalSuperAdminId) {
-            $superAdminUser = User::withoutGlobalScopes()->where('id', '=', $originalSuperAdminId, 'and')->first();
-            if ($superAdminUser && $superAdminUser->isSuperAdmin()) {
-                Auth::login($superAdminUser);
-            } else {
-                Auth::logout();
-                return redirect()->route('superadmin.login')->with('error', 'Super Admin session expired. Please sign in again.');
-            }
-        } elseif (Auth::check() && Auth::user()->isSuperAdmin()) {
-            // Already logged in as super admin
-            $superAdminUser = Auth::user();
-        } else {
-            return redirect()->route('superadmin.login');
+        if ($user->isSuperAdmin()) {
+            return back()->with('error', 'Cannot delete Platform Super-Admin accounts from tenant management.');
         }
 
-        $request->session()->forget([
-            'is_impersonating',
-            'original_super_admin_id',
-            'original_super_admin_name',
-            'impersonated_tenant_name',
-            'impersonated_tenant_id',
-        ]);
+        $userName = $user->name;
+        $user->delete();
 
-        TenantResolver::clearTenantContext();
-
-        return redirect()->route('superadmin.dashboard')->with('status', 'Returned to Platform Super-Admin Panel.');
+        return redirect()->route('superadmin.tenants.users', $tenant->id)
+            ->with('status', "User account for {$userName} deleted successfully.");
     }
 }

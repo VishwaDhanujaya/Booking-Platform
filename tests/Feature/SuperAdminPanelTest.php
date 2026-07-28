@@ -102,25 +102,34 @@ class SuperAdminPanelTest extends TestCase
         ]);
     }
 
-    public function test_platform_admin_can_impersonate_tenant_owner_with_audit_trail()
+    public function test_platform_admin_can_manage_tenant_user_accounts_directly()
     {
         $superAdmin = User::where('is_super_admin', '=', true, 'and')->first(['*']);
-        $tenant = Tenant::whereNotNull('id', 'and')->first(['*']);
+        $tenant = Tenant::first(['*']);
 
-        $response = $this->actingAs($superAdmin)->post("/platform-admin/tenants/{$tenant->id}/impersonate");
+        // View tenant users screen
+        $response = $this->actingAs($superAdmin)->get("/platform-admin/tenants/{$tenant->id}/users");
+        $response->assertStatus(200);
+        $response->assertSee("User Accounts: {$tenant->name}");
 
-        $response->assertRedirect('/' . $tenant->slug . '/admin');
-        $this->assertDatabaseHas('impersonation_logs', [
-            'super_admin_id' => $superAdmin->id,
-            'tenant_id' => $tenant->id,
+        // Create new user for tenant via platform admin
+        $createResponse = $this->actingAs($superAdmin)->post("/platform-admin/tenants/{$tenant->id}/users", [
+            'name' => 'Manager Sunil',
+            'email' => 'sunil@tenant.lk',
+            'role' => 'manager',
+            'password' => 'password123',
         ]);
+        $createResponse->assertRedirect(route('superadmin.tenants.users', $tenant->id));
 
-        // Stop impersonating
-        $stopResponse = $this->withSession([
-            'is_impersonating' => true,
-            'original_super_admin_id' => $superAdmin->id,
-        ])->post('/platform-admin/stop-impersonating');
-        $stopResponse->assertRedirect(route('superadmin.dashboard'));
+        $newUser = User::withoutGlobalScopes()->where('email', '=', 'sunil@tenant.lk', 'and')->first();
+        $this->assertNotNull($newUser);
+        $this->assertEquals('manager', $newUser->role);
+
+        // Delete user for tenant via platform admin
+        $deleteResponse = $this->actingAs($superAdmin)->delete("/platform-admin/tenants/{$tenant->id}/users/{$newUser->id}");
+        $deleteResponse->assertRedirect(route('superadmin.tenants.users', $tenant->id));
+
+        $this->assertNull(User::withoutGlobalScopes()->find($newUser->id, ['*']));
     }
 
     public function test_super_admin_can_login_via_login_form_and_redirects_to_platform_admin()

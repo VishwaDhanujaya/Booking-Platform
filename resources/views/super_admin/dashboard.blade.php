@@ -85,7 +85,7 @@
 
         </div>
 
-        <!-- 2 Column Layout: Recent Tenants & Audit Logs -->
+        <!-- 2 Column Layout: Recent Tenants & Recent Users -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             <!-- Left Column: Recent Tenants -->
@@ -130,12 +130,9 @@
                                         @endif
                                     </td>
                                     <td class="py-3.5 text-right">
-                                        <form action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors">
-                                                Log in as &rarr;
-                                            </button>
-                                        </form>
+                                        <a href="{{ route('superadmin.tenants.users', $tenant->id) }}" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
+                                            Users &rarr;
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -144,30 +141,32 @@
                 </div>
             </div>
 
-            <!-- Right Column: Audit Log Trail for Impersonation -->
+            <!-- Right Column: Recent Tenant Users -->
             <div class="lg:col-span-5 bg-white border-2 border-slate-200/80 rounded-3xl p-6 space-y-6 shadow-sm">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-900">Staff Impersonation Audit Log</h3>
-                    <p class="text-xs text-slate-500">Security log of all "Log in as Tenant" support actions.</p>
+                    <h3 class="text-lg font-bold text-slate-900">Recent Tenant Users & Staff</h3>
+                    <p class="text-xs text-slate-500">Latest user accounts registered across all facilities.</p>
                 </div>
 
-                @if($recentImpersonations->isEmpty())
+                @if($recentUsers->isEmpty())
                     <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
-                        No support impersonation logs recorded yet.
+                        No tenant user accounts recorded yet.
                     </div>
                 @else
                     <div class="space-y-3 max-h-95 overflow-y-auto pr-1">
-                        @foreach($recentImpersonations as $log)
+                        @foreach($recentUsers as $u)
                             <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-xs">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-slate-900">{{ $log->superAdmin->name ?? 'Staff Admin' }}</span>
-                                    <span class="text-[10px] font-mono text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
+                                    <span class="font-bold text-slate-900">{{ $u->name }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-50 text-sltds-endeavour border border-blue-200">
+                                        {{ str_replace('_', ' ', $u->role) }}
+                                    </span>
                                 </div>
                                 <div class="text-slate-600">
-                                    Accessed tenant <strong class="text-sltds-endeavour">{{ $log->tenant->name ?? 'Unknown Tenant' }}</strong> as user <span class="text-slate-500">({{ $log->impersonatedUser->email ?? 'Owner' }})</span>
+                                    Email: <strong class="text-slate-800">{{ $u->email }}</strong>
                                 </div>
-                                <div class="text-[10px] font-mono text-slate-400">
-                                    IP: {{ $log->ip_address ?? '127.0.0.1' }}
+                                <div class="text-[10px] text-slate-400 font-medium">
+                                    Facility: <span class="text-sltds-endeavour font-bold">{{ $u->tenant->name ?? 'System' }}</span>
                                 </div>
                             </div>
                         @endforeach

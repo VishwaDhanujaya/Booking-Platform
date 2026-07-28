@@ -135,13 +135,10 @@
                                 <!-- Actions -->
                                 <td class="py-4 px-6 text-right space-x-2">
                                     
-                                    <!-- Impersonate Button -->
-                                    <form action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" title="Log in as Tenant Owner for support" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all shadow-xs">
-                                            Log in as &rarr;
-                                        </button>
-                                    </form>
+                                    <!-- Manage Users Link -->
+                                    <a href="{{ route('superadmin.tenants.users', $tenant->id) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all shadow-xs">
+                                        Manage Users &rarr;
+                                    </a>
 
                                     <!-- Edit Link -->
                                     <a href="{{ route('superadmin.tenants.edit', $tenant->id) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors">

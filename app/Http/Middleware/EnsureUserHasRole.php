@@ -32,8 +32,8 @@ class EnsureUserHasRole
             ]);
         }
 
-        // Super admin bypasses all role restrictions (unless impersonating a tenant)
-        if ($user->role === 'super_admin' && !session('is_impersonating')) {
+        // Super admin bypasses all role restrictions
+        if ($user->role === 'super_admin') {
             return $next($request);
         }
 
@@ -55,7 +55,7 @@ class EnsureUserHasRole
         }
 
         // Check if Tenant account is active
-        if ($activeTenant && !$activeTenant->is_active && !session('is_impersonating') && !$user->isSuperAdmin()) {
+        if ($activeTenant && !$activeTenant->is_active && !$user->isSuperAdmin()) {
             abort(403, "Facility Access Suspended: The platform account for '{$activeTenant->name}' is currently suspended. Please contact platform support.");
         }
 
