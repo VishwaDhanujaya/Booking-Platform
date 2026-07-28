@@ -159,8 +159,9 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // 1. Capture tenant context before invalidating session
+        // 1. Capture user role & tenant context before invalidating session
         $user = Auth::user();
+        $isSuperAdmin = $user && $user->isSuperAdmin();
         $tenant = TenantResolver::getActiveTenantModel() ?? $user?->tenant;
         $tenantSlug = $request->query('tenant') 
             ?? $tenant?->slug 
@@ -172,13 +173,19 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         TenantResolver::clearTenantContext();
 
-        // 3. If signed out from a tenant site / staff portal, redirect to that tenant's guest view
+        // 3. Platform Super-Admin Logout -> Redirect to Platform Admin Login (/platform-admin/login)
+        if ($isSuperAdmin) {
+            return redirect()->route('superadmin.login')
+                ->with('status', 'You have been signed out from Platform Super-Admin.');
+        }
+
+        // 4. If signed out from a tenant site / staff portal, redirect to that tenant's guest view
         if ($tenantSlug) {
-            return redirect()->route('booking.index', ['tenant' => $tenantSlug])
+            return redirect('/' . $tenantSlug . '/book')
                 ->with('status', 'You have been signed out successfully.');
         }
 
-        // 4. Default fallback for platform super-admin or root logout
+        // 5. Default fallback to parent site
         return redirect()->route('parent.home')
             ->with('status', 'You have been signed out successfully.');
     }
