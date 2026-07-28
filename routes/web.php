@@ -125,3 +125,55 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
         Route::post('/admin/settings', [\App\Http\Controllers\TenantSettingsController::class, 'update'])->name('admin.settings.update');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| 6. PATH-BASED TENANT DIRECT URL ROUTES (e.g. /zenith-yoga/book, /zenith-yoga/admin)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('{tenant_slug}')->where(['tenant_slug' => '[a-zA-Z0-9\-]+'])->group(function () {
+    Route::get('/', function ($tenant_slug) {
+        return redirect('/' . $tenant_slug . '/book');
+    });
+    Route::get('/book', [PublicBookingController::class, 'index']);
+    Route::get('/pricing', [PublicBookingController::class, 'pricing']);
+    Route::get('/booking/checkout', [PublicBookingController::class, 'checkout']);
+    Route::post('/booking/checkout', [PublicBookingController::class, 'process']);
+    Route::get('/booking/confirmation/{reference}', [PublicBookingController::class, 'confirmation']);
+    Route::get('/booking/invoice/{reference}', [InvoiceController::class, 'show']);
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/my-account', [CustomerDashboardController::class, 'index']);
+        Route::post('/my-account/cancel/{id}', [CustomerDashboardController::class, 'cancelBooking']);
+        Route::post('/my-account/profile', [CustomerDashboardController::class, 'updateProfile']);
+        Route::post('/booking/waitlist', [PublicBookingController::class, 'joinWaitlist']);
+    });
+
+    Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->prefix('admin')->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index']);
+        Route::get('/bookings', [AdminDashboardController::class, 'bookings']);
+        Route::get('/bookings/{id}/invoice', [InvoiceController::class, 'showAdmin']);
+        Route::get('/courts', [AdminDashboardController::class, 'courts']);
+        Route::get('/customers', [AdminDashboardController::class, 'customers']);
+        Route::post('/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow']);
+        Route::post('/bookings/{id}/mark-paid', [AdminDashboardController::class, 'markPaid']);
+        Route::post('/bookings/{id}/cancel', [AdminDashboardController::class, 'cancelBooking']);
+
+        Route::middleware('role:owner,manager')->group(function () {
+            Route::post('/customers/{id}/issue-credits', [AdminDashboardController::class, 'issueCredits']);
+            Route::post('/customers/{id}/issue-pass', [AdminDashboardController::class, 'issuePass']);
+            Route::post('/courts', [AdminDashboardController::class, 'storeCourt']);
+            Route::post('/courts/{id}', [AdminDashboardController::class, 'updateCourt']);
+            Route::delete('/courts/{id}', [AdminDashboardController::class, 'deleteCourt']);
+            Route::get('/pricing', [AdminDashboardController::class, 'pricing']);
+            Route::post('/pricing', [AdminDashboardController::class, 'storePricingRule']);
+            Route::post('/pricing/{id}/toggle', [AdminDashboardController::class, 'togglePricingRule']);
+            Route::delete('/pricing/{id}', [AdminDashboardController::class, 'deletePricingRule']);
+            Route::get('/staff', [AdminDashboardController::class, 'staff']);
+            Route::post('/staff', [AdminDashboardController::class, 'storeStaff']);
+            Route::delete('/staff/{id}', [AdminDashboardController::class, 'deleteStaff']);
+            Route::get('/settings', [\App\Http\Controllers\TenantSettingsController::class, 'edit']);
+            Route::post('/settings', [\App\Http\Controllers\TenantSettingsController::class, 'update']);
+        });
+    });
+});

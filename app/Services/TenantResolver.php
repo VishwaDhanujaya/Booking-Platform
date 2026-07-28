@@ -25,7 +25,18 @@ class TenantResolver
             }
         }
 
-        // 2. Subdomain & Custom Domain Resolution (e.g. colombo.localhost or apex.appdomain.test)
+        // 2. URL Path Segment Resolution (e.g. /zenith-yoga/book or /zenith-yoga/admin)
+        $firstSegment = strtolower((string) $request->segment(1));
+        $excludedSegments = ['platform-admin', 'register-business', 'login', 'register', 'logout', 'parent', 'features', 'where-to-use', 'customers', 'platform-pricing', 'contact', 'demo', 'api', 'storage', 'build', 'images', 'uploads'];
+        if ($firstSegment && !in_array($firstSegment, $excludedSegments, true)) {
+            $tenant = Tenant::where('slug', '=', $firstSegment, 'and')->where('is_active', '=', true, 'and')->first(['*']);
+            if ($tenant) {
+                static::setActiveTenantContext($tenant);
+                return $tenant;
+            }
+        }
+
+        // 3. Subdomain & Custom Domain Resolution (e.g. colombo.localhost or apex.appdomain.test)
         $host = $request->getHost();
         if ($host && $host !== 'localhost' && $host !== '127.0.0.1') {
             // Direct domain check
@@ -46,8 +57,8 @@ class TenantResolver
             }
         }
 
-        // 3. Session Resolution if already selected and not on parent root
-        if (session()->has('tenant_id') && $request->has('tenant')) {
+        // 4. Session Resolution
+        if (session()->has('tenant_id')) {
             $tenant = Tenant::where('id', '=', session('tenant_id'), 'and')->where('is_active', '=', true, 'and')->first(['*']);
             if ($tenant) {
                 static::setActiveTenantContext($tenant);
@@ -55,7 +66,6 @@ class TenantResolver
             }
         }
 
-        // If on apex domain without tenant query parameter, this is Parent Site Context!
         return null;
     }
 
