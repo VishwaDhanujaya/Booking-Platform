@@ -233,7 +233,7 @@
                     </span>
                 </div>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">Built for Multi-Court Facilities & Studios</h2>
-                <p class="text-slate-300 text-sm">Experience the Yepbooking-style day grid and automated waitlist queues in action.</p>
+                <p class="text-slate-300 text-sm">Experience the interactive multi-court day grid and automated waitlist queues in action.</p>
             </div>
 
             <!-- Row 1: Padel & Sports Complex Showcase -->
@@ -246,7 +246,7 @@
                         <span class="w-2 h-2 rounded-full bg-sltds-sky"></span>
                         Racquet Sports & Arenas
                     </div>
-                    <h3 class="text-2xl sm:text-3xl font-black text-white">Yepbooking-Style Multi-Court Day Grid</h3>
+                    <h3 class="text-2xl sm:text-3xl font-black text-white">Interactive Multi-Court Day Grid</h3>
                     <p class="text-xs text-slate-300 leading-relaxed">
                         Display all your courts side-by-side as rows with hourly time slot columns. Players instantly see which courts are open, check hourly pricing under each header, and select consecutive slots in seconds.
                     </p>
