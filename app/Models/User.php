@@ -18,6 +18,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'role',
+        'is_super_admin',
         'is_banned',
         'banned_until',
         'ban_reason',
@@ -32,8 +33,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'banned_until' => 'datetime',
         'is_banned' => 'boolean',
+        'is_super_admin' => 'boolean',
         'password' => 'hashed',
     ];
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) ($this->is_super_admin || $this->role === 'platform_admin' || $this->role === 'super_admin');
+    }
 
     public function tenant()
     {
@@ -74,7 +81,7 @@ class User extends Authenticatable
 
     public function hasRole(string $roleSlug): bool
     {
-        if ($this->role === $roleSlug || $this->role === 'super_admin') {
+        if ($this->role === $roleSlug || $this->isSuperAdmin()) {
             return true;
         }
 

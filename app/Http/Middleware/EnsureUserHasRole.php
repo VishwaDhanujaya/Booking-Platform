@@ -19,6 +19,7 @@ class EnsureUserHasRole
             return redirect()->route('login')->with('error', 'Please sign in to access the staff portal.');
         }
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($user->is_banned) {
@@ -31,9 +32,31 @@ class EnsureUserHasRole
             ]);
         }
 
-        // Super admin bypasses all role restrictions
-        if ($user->role === 'super_admin') {
+        // Super admin bypasses all role restrictions (unless impersonating a tenant)
+        if ($user->role === 'super_admin' && !session('is_impersonating')) {
             return $next($request);
+        }
+
+        // Enforce Tenant Boundary Check for Tenant Staff
+        $activeTenant = \App\Services\TenantResolver::getActiveTenantModel();
+        if ($user->tenant_id) {
+            if ($activeTenant && (int) $user->tenant_id !== (int) $activeTenant->id) {
+                // If user belongs to Tenant A but tries to access Tenant B explicitly
+                if ($request->has('tenant') && strtolower($request->query('tenant')) !== strtolower($user->tenant?->slug ?? '')) {
+                    abort(403, 'Cross-Tenant Access Denied: Your account does not have authorization to access ' . ($activeTenant->name ?? 'this facility') . '.');
+                }
+                
+                // Set correct tenant context for user's assigned tenant
+                if ($user->tenant) {
+                    \App\Services\TenantResolver::setActiveTenantContext($user->tenant);
+                    $activeTenant = $user->tenant;
+                }
+            }
+        }
+
+        // Check if Tenant account is active
+        if ($activeTenant && !$activeTenant->is_active && !session('is_impersonating') && !$user->isSuperAdmin()) {
+            abort(403, "Facility Access Suspended: The platform account for '{$activeTenant->name}' is currently suspended. Please contact platform support.");
         }
 
         if (!empty($roles)) {

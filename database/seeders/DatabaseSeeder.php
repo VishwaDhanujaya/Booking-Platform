@@ -26,25 +26,46 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ==========================================
+        // PLATFORM SUPER ADMIN (SLTDS Staff)
+        // ==========================================
+        User::create([
+            'tenant_id' => null,
+            'name' => 'SLTDS Platform Admin',
+            'email' => 'superadmin@sltdigital.com',
+            'phone' => '+94 11 000 0000',
+            'password' => Hash::make('password'),
+            'role' => 'platform_admin',
+            'is_super_admin' => true,
+        ]);
+
+        // ==========================================
         // TENANT 1: Colombo Courts Club
         // ==========================================
         $t1 = Tenant::create([
             'name' => 'Colombo Courts Club',
             'slug' => 'colombo-courts-club',
-            'domain' => 'colombo.localhost',
+            'category' => 'Sports Venues & Facilities',
+            'tagline' => 'Premier Multi-Sport & Court Complex in Colombo',
+            'description' => '6 international standard badminton courts, 4 floodlit tennis courts, and 2 championship padel arenas.',
+            'location' => 'Colombo, Sri Lanka',
+            'domain' => 'colombo-courts-club.localhost',
             'address' => '45 Maitland Crescent, Colombo 00700, Sri Lanka',
             'phone' => '+94 11 234 5678',
             'email' => 'info@colombocourts.lk',
-            'brand_color' => '#0284c7', // Sky Blue
-            'logo_url' => '/images/logo.png',
-            'theme_settings' => [
-                'primary_color' => '#0284c7',
-                'accent_color' => '#0f172a',
-                'font_family' => 'Inter, sans-serif'
+            'opening_hours' => 'Mon - Sun: 6:00 AM - 10:00 PM',
+            'brand_color' => '#0056A2',
+            'logo_url' => null,
+            'hero_headline' => 'Reserve Premium Colombo Courts Online',
+            'hero_subheading' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated court lighting.',
+            'hero_image_url' => '/images/hero_sports_court.png',
+            'notices' => [
+                ['title' => 'Non-Marking Shoes Required for Badminton', 'link' => '#rules', 'icon' => 'document-text'],
+                ['title' => 'Special Member Pass Vouchers Available', 'link' => '#vouchers', 'icon' => 'ticket'],
             ],
             'subscription_plan' => 'pro',
             'subscription_status' => 'active',
             'is_active' => true,
+            'is_public' => true,
         ]);
 
         // Tenant 1 Roles
@@ -377,20 +398,28 @@ class DatabaseSeeder extends Seeder
         $t2 = Tenant::create([
             'name' => 'Apex Sports Arena',
             'slug' => 'apex-sports-arena',
-            'domain' => 'apex.localhost',
+            'category' => 'Sports Venues & Facilities',
+            'tagline' => 'Championship Badminton & Squash Facility',
+            'description' => 'WSF certified sprung maple wood squash arena & BWF certified badminton courts with LED lighting.',
+            'location' => 'Kandy, Sri Lanka',
+            'domain' => 'apex-sports-arena.localhost',
             'address' => '120 Race Course Promenade, Kandy, Sri Lanka',
             'phone' => '+94 81 999 8888',
             'email' => 'info@apexsports.lk',
-            'brand_color' => '#10b981', // Emerald Green
-            'logo_url' => '/images/apex-logo.png',
-            'theme_settings' => [
-                'primary_color' => '#10b981',
-                'accent_color' => '#065f46',
-                'font_family' => 'Outfit, sans-serif'
+            'opening_hours' => 'Mon - Sun: 5:00 AM - 11:00 PM',
+            'brand_color' => '#50B748',
+            'logo_url' => null,
+            'hero_headline' => 'Book Championship Kandy Badminton & Squash Courts',
+            'hero_subheading' => 'BWF-certified indoor green mats and WSF glass-backed squash courts.',
+            'hero_image_url' => '/images/hero_sports_court.png',
+            'notices' => [
+                ['title' => 'Racket Stringing & Grip Service Onsite', 'link' => '#stringing', 'icon' => 'info'],
+                ['title' => 'Student & Senior Discounts Available', 'link' => '#discounts', 'icon' => 'ticket'],
             ],
             'subscription_plan' => 'enterprise',
             'subscription_status' => 'active',
             'is_active' => true,
+            'is_public' => true,
         ]);
 
         // Tenant 2 Roles
@@ -541,6 +570,72 @@ class DatabaseSeeder extends Seeder
             'base_amount' => 7000.00,
             'addons_amount' => 800.00,
             'total_amount' => 7800.00,
+        ]);
+
+        // ==========================================
+        // TENANT 3: Zenith Yoga & Wellness (Group Classes & Courses)
+        // ==========================================
+        Tenant::create([
+            'name' => 'Zenith Yoga & Wellness',
+            'slug' => 'zenith-yoga',
+            'category' => 'Group Classes & Courses',
+            'tagline' => 'Boutique Hot Yoga, Pilates & Meditation Studio',
+            'description' => 'Holistic class bookings, instructor-led workshops, and reformer Pilates sessions with real-time slot reservations.',
+            'location' => 'Colombo 03, Sri Lanka',
+            'domain' => 'zenith.localhost',
+            'address' => '88 Galle Road, Colombo 03, Sri Lanka',
+            'phone' => '+94 11 456 7890',
+            'email' => 'hello@zenithyoga.lk',
+            'brand_color' => '#8b5cf6', // Violet
+            'logo_url' => '/images/zenith-logo.png',
+            'subscription_plan' => 'pro',
+            'subscription_status' => 'active',
+            'is_active' => true,
+            'is_public' => true,
+        ]);
+
+        // ==========================================
+        // TENANT 4: Ironworks Gym & Performance Lab (Fitness Equipment)
+        // ==========================================
+        Tenant::create([
+            'name' => 'Ironworks Gym & Performance',
+            'slug' => 'ironworks-gym',
+            'category' => 'Fitness Equipment',
+            'tagline' => 'High-Performance Powerlifting & Gym Equipment Booking',
+            'description' => 'Book dedicated power racks, private PT lifting bays, and recovery ice-baths with live capacity tracking.',
+            'location' => 'Nugegoda, Sri Lanka',
+            'domain' => 'ironworks.localhost',
+            'address' => '14 High Level Road, Nugegoda, Sri Lanka',
+            'phone' => '+94 11 333 4444',
+            'email' => 'contact@ironworksgym.lk',
+            'brand_color' => '#ef4444', // Red
+            'logo_url' => '/images/ironworks-logo.png',
+            'subscription_plan' => 'pro',
+            'subscription_status' => 'active',
+            'is_active' => true,
+            'is_public' => true,
+        ]);
+
+        // ==========================================
+        // TENANT 5: Little Champs Creche & Play (Creche & Childcare)
+        // ==========================================
+        Tenant::create([
+            'name' => 'Little Champs Creche & Play',
+            'slug' => 'little-champs',
+            'category' => 'Creche',
+            'tagline' => 'On-Demand In-Venue Childcare & Playcare Slots',
+            'description' => 'Supervised drop-off creche booking for parents during workout and court reservation times.',
+            'location' => 'Battaramulla, Sri Lanka',
+            'domain' => 'littlechamps.localhost',
+            'address' => '55 Main Street, Battaramulla, Sri Lanka',
+            'phone' => '+94 11 777 8888',
+            'email' => 'care@littlechamps.lk',
+            'brand_color' => '#f59e0b', // Amber
+            'logo_url' => '/images/champs-logo.png',
+            'subscription_plan' => 'starter',
+            'subscription_status' => 'active',
+            'is_active' => true,
+            'is_public' => true,
         ]);
     }
 }

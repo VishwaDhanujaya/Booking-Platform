@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ParentSiteController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\AuthController;
@@ -8,22 +9,61 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\TenantRegistrationController;
 
-// Public Guest Routes
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+/*
+|--------------------------------------------------------------------------
+| 1. SLT DIGITAL SERVICES - PARENT MARKETING SITE ROUTES (Apex Domain)
+|--------------------------------------------------------------------------
+*/
+Route::group([], function () {
+    Route::get('/', [ParentSiteController::class, 'index'])->name('home');
+    Route::get('/parent', [ParentSiteController::class, 'index'])->name('parent.home');
+    Route::get('/features', [ParentSiteController::class, 'features'])->name('parent.features');
+    Route::get('/where-to-use', [ParentSiteController::class, 'whereToUse'])->name('parent.where-to-use');
+    Route::get('/customers', [ParentSiteController::class, 'customers'])->name('parent.customers');
+    Route::get('/platform-pricing', [ParentSiteController::class, 'pricing'])->name('parent.pricing');
+    Route::get('/contact', [ParentSiteController::class, 'contact'])->name('parent.contact');
+    Route::get('/demo', [ParentSiteController::class, 'contact'])->name('parent.demo');
+    Route::post('/contact', [ParentSiteController::class, 'storeContact'])->name('parent.contact.submit');
+});
 
+/*
+|--------------------------------------------------------------------------
+| SLTDS PLATFORM ADMIN ROUTES (Super-Admin Staff Only)
+|--------------------------------------------------------------------------
+*/
+Route::get('/platform-admin/login', [AuthController::class, 'showPlatformLogin'])->name('superadmin.login');
+
+Route::middleware(['auth', \App\Http\Middleware\EnsureSuperAdmin::class])->prefix('platform-admin')->group(function () {
+    Route::get('/', [\App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
+    Route::get('/tenants', [\App\Http\Controllers\SuperAdminController::class, 'tenants'])->name('superadmin.tenants');
+    Route::get('/tenants/create', [\App\Http\Controllers\SuperAdminController::class, 'createTenant'])->name('superadmin.tenants.create');
+    Route::post('/tenants', [\App\Http\Controllers\SuperAdminController::class, 'storeTenant'])->name('superadmin.tenants.store');
+    Route::get('/tenants/{id}/edit', [\App\Http\Controllers\SuperAdminController::class, 'editTenant'])->name('superadmin.tenants.edit');
+    Route::post('/tenants/{id}/update', [\App\Http\Controllers\SuperAdminController::class, 'updateTenant'])->name('superadmin.tenants.update');
+    Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\SuperAdminController::class, 'toggleStatus'])->name('superadmin.tenants.toggle-status');
+    Route::post('/tenants/{id}/toggle-public', [\App\Http\Controllers\SuperAdminController::class, 'togglePublic'])->name('superadmin.tenants.toggle-public');
+    Route::post('/tenants/{id}/impersonate', [\App\Http\Controllers\SuperAdminController::class, 'impersonate'])->name('superadmin.tenants.impersonate');
+});
+
+Route::middleware('auth')->match(['get', 'post'], '/platform-admin/stop-impersonating', [\App\Http\Controllers\SuperAdminController::class, 'stopImpersonating'])->name('superadmin.stop-impersonating');
+
+/*
+|--------------------------------------------------------------------------
+| 2. TENANT SCOPED PUBLIC & BOOKING ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::get('/book', [PublicBookingController::class, 'index'])->name('booking.index');
+Route::get('/pricing', [PublicBookingController::class, 'pricing'])->name('pricing');
 Route::get('/booking/checkout', [PublicBookingController::class, 'checkout'])->name('booking.checkout');
 Route::post('/booking/checkout', [PublicBookingController::class, 'process'])->name('booking.process');
 Route::get('/booking/confirmation/{reference}', [PublicBookingController::class, 'confirmation'])->name('booking.confirmation');
 Route::get('/booking/invoice/{reference}', [InvoiceController::class, 'show'])->name('booking.invoice');
 
-Route::get('/pricing', function () {
-    return view('pricing');
-})->name('pricing');
-
-// Auth Routes (Guest)
+/*
+|--------------------------------------------------------------------------
+| 3. AUTHENTICATION ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
@@ -37,7 +77,11 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Customer Protected Routes
+/*
+|--------------------------------------------------------------------------
+| 4. CUSTOMER PROTECTED ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
     Route::get('/my-account', [CustomerDashboardController::class, 'index'])->name('customer.my-bookings');
     Route::post('/my-account/cancel/{id}', [CustomerDashboardController::class, 'cancelBooking'])->name('customer.booking.cancel');
@@ -45,7 +89,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/booking/waitlist', [PublicBookingController::class, 'joinWaitlist'])->name('booking.waitlist');
 });
 
-// Admin / Staff Management Portal Routes (Role Enforced)
+/*
+|--------------------------------------------------------------------------
+| 5. TENANT ADMIN & STAFF MANAGEMENT PORTAL ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.bookings');
@@ -54,11 +102,12 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
     Route::get('/admin/customers', [AdminDashboardController::class, 'customers'])->name('admin.customers');
     Route::post('/admin/bookings/{id}/no-show', [AdminDashboardController::class, 'markNoShow'])->name('admin.bookings.noshow');
     Route::post('/admin/bookings/{id}/mark-paid', [AdminDashboardController::class, 'markPaid'])->name('admin.bookings.mark-paid');
-    Route::post('/admin/customers/{id}/issue-credits', [AdminDashboardController::class, 'issueCredits'])->name('admin.customers.issue-credits');
-    Route::post('/admin/customers/{id}/issue-pass', [AdminDashboardController::class, 'issuePass'])->name('admin.customers.issue-pass');
+    Route::post('/admin/bookings/{id}/cancel', [AdminDashboardController::class, 'cancelBooking'])->name('admin.bookings.cancel');
     
-    // Manage Courts, Pricing Rules, & Staff Members restricted to Owner & Manager
     Route::middleware('role:owner,manager')->group(function () {
+        Route::post('/admin/customers/{id}/issue-credits', [AdminDashboardController::class, 'issueCredits'])->name('admin.customers.issue-credits');
+        Route::post('/admin/customers/{id}/issue-pass', [AdminDashboardController::class, 'issuePass'])->name('admin.customers.issue-pass');
+
         Route::post('/admin/courts', [AdminDashboardController::class, 'storeCourt'])->name('admin.courts.store');
         Route::post('/admin/courts/{id}', [AdminDashboardController::class, 'updateCourt'])->name('admin.courts.update');
         Route::delete('/admin/courts/{id}', [AdminDashboardController::class, 'deleteCourt'])->name('admin.courts.delete');
@@ -71,5 +120,8 @@ Route::middleware(['auth', 'role:owner,manager,trainer_staff,front_desk'])->grou
         Route::get('/admin/staff', [AdminDashboardController::class, 'staff'])->name('admin.staff');
         Route::post('/admin/staff', [AdminDashboardController::class, 'storeStaff'])->name('admin.staff.store');
         Route::delete('/admin/staff/{id}', [AdminDashboardController::class, 'deleteStaff'])->name('admin.staff.delete');
+
+        Route::get('/admin/settings', [\App\Http\Controllers\TenantSettingsController::class, 'edit'])->name('admin.settings');
+        Route::post('/admin/settings', [\App\Http\Controllers\TenantSettingsController::class, 'update'])->name('admin.settings.update');
     });
 });

@@ -20,6 +20,10 @@ class PublicBookingController extends Controller
     {
         $tenant = TenantResolver::getActiveTenantModel() ?? Tenant::first();
 
+        if ($tenant && !$tenant->is_active) {
+            return response()->view('errors.tenant_suspended', compact('tenant'), 403);
+        }
+
         $categories = SportCategory::withCount('courts')->get();
 
         $selectedSportSlug = (string) $request->query('sport', 'all');
@@ -248,5 +252,20 @@ class PublicBookingController extends Controller
         }
 
         return view('booking.confirmation', compact('tenant', 'booking'));
+    }
+
+    public function pricing(Request $request)
+    {
+        $tenantModel = TenantResolver::getActiveTenantModel() ?? Tenant::first();
+        $tenant = TenantResolver::getActiveTenant();
+
+        $courts = Court::where('is_active', true)->with('sportCategory')->get();
+        $categories = SportCategory::withCount('courts')->get();
+
+        $pricingRules = \App\Models\PricingRule::where('tenant_id', $tenantModel->id)
+                            ->where('is_active', true)
+                            ->get();
+
+        return view('booking.pricing', compact('tenantModel', 'tenant', 'courts', 'categories', 'pricingRules'));
     }
 }

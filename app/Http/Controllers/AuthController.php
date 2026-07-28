@@ -19,14 +19,20 @@ class AuthController extends Controller
         return view('auth.login', compact('tenant'));
     }
 
+    public function showPlatformLogin()
+    {
+        if (Auth::check() && (Auth::user()->isSuperAdmin() || session('is_impersonating'))) {
+            return redirect()->route('superadmin.dashboard');
+        }
+        return view('auth.platform_login');
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
-
-        $tenant = TenantResolver::getActiveTenantModel();
 
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withInput($request->only('email'))->withErrors([
@@ -48,25 +54,43 @@ class AuthController extends Controller
             ]);
         }
 
-        // 2. Check tenant scope matching (unless super_admin)
-        if ($user->role !== 'super_admin' && $tenant && $user->tenant_id && (int) $user->tenant_id !== (int) $tenant->id) {
+        // 2. Super Admin Access -> Always redirect to SLTDS Platform Admin (/platform-admin)
+        if ($user->isSuperAdmin()) {
+            Log::info("Super Admin logged in: {$user->email}");
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        // 3. Tenant scope validation for regular users
+        $activeTenant = TenantResolver::resolve($request);
+        if ($activeTenant && $user->tenant_id && (int) $user->tenant_id !== (int) $activeTenant->id) {
+            $userTenant = \App\Models\Tenant::find($user->tenant_id);
+            $userTenantName = $userTenant ? $userTenant->name : 'another facility';
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
-                'email' => "This account is registered under another facility tenant. Please access your facility URL.",
+            return redirect()->route('login', ['tenant' => $activeTenant->slug])->withErrors([
+                'email' => "This account ({$user->email}) is registered under {$userTenantName}. Please switch to {$userTenantName} or create a new account for {$activeTenant->name}.",
             ]);
         }
 
-        Log::info("User logged in successfully: {$user->email} [Role: {$user->role}] for Tenant: {$tenant?->name}");
-
-        // 3. Role-based redirect
-        if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'super_admin'])) {
-            return redirect()->intended(route('admin.dashboard'));
+        // 4. Automatically bind tenant context for tenant users
+        if ($user->tenant_id) {
+            $userTenant = \App\Models\Tenant::find($user->tenant_id, ['*']);
+            if ($userTenant) {
+                TenantResolver::setActiveTenantContext($userTenant);
+            }
         }
 
-        return redirect()->intended(route('customer.my-bookings'));
+        Log::info("User logged in successfully: {$user->email} [Role: {$user->role}]");
+
+        // 5. Role-based redirect
+        if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'platform_admin'])) {
+            $tenantSlug = $user->tenant?->slug ?? session('active_tenant_slug');
+            return redirect()->route('admin.dashboard', $tenantSlug ? ['tenant' => $tenantSlug] : []);
+        }
+
+        return redirect()->route('customer.my-bookings');
     }
 
     public function showRegister()
@@ -133,10 +157,27 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // 1. Capture tenant context before invalidating session
+        $user = Auth::user();
+        $tenant = TenantResolver::getActiveTenantModel() ?? $user?->tenant;
+        $tenantSlug = $request->query('tenant') 
+            ?? $tenant?->slug 
+            ?? session('active_tenant_slug');
+
+        // 2. Perform Logout & Session Invalidation
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        TenantResolver::clearTenantContext();
 
-        return redirect()->route('home');
+        // 3. If signed out from a tenant site / staff portal, redirect to that tenant's guest view
+        if ($tenantSlug) {
+            return redirect()->route('booking.index', ['tenant' => $tenantSlug])
+                ->with('status', 'You have been signed out successfully.');
+        }
+
+        // 4. Default fallback for platform super-admin or root logout
+        return redirect()->route('parent.home')
+            ->with('status', 'You have been signed out successfully.');
     }
 }

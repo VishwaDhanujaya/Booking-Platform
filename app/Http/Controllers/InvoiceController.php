@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Services\InvoiceService;
+use App\Services\TenantResolver;
 
 class InvoiceController extends Controller
 {
@@ -21,7 +22,13 @@ class InvoiceController extends Controller
 
     public function showAdmin(int $id, InvoiceService $invoiceService)
     {
-        $booking = Booking::with(['court.sportCategory', 'tenant'])->findOrFail($id);
+        $tenant = TenantResolver::getActiveTenantModel();
+
+        // Enforce tenant boundary scoping
+        $booking = Booking::where('tenant_id', '=', $tenant->id, 'and')
+            ->with(['court.sportCategory', 'tenant'])
+            ->findOrFail($id);
+
         $invoice = $booking->invoice ?? $invoiceService->generateInvoice($booking);
 
         return view('booking.invoice', compact('booking', 'invoice'));

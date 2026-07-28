@@ -46,8 +46,8 @@ class TenantResolver
             }
         }
 
-        // 3. Session Fallback
-        if (session()->has('tenant_id')) {
+        // 3. Session Resolution if already selected and not on parent root
+        if (session()->has('tenant_id') && $request->has('tenant')) {
             $tenant = Tenant::where('id', '=', session('tenant_id'), 'and')->where('is_active', '=', true, 'and')->first(['*']);
             if ($tenant) {
                 static::setActiveTenantContext($tenant);
@@ -55,13 +55,20 @@ class TenantResolver
             }
         }
 
-        // 4. Default Local Dev Fallback (First active tenant in DB)
-        $tenant = Tenant::where('is_active', '=', true, 'and')->first(['*']);
-        if ($tenant) {
-            static::setActiveTenantContext($tenant);
-        }
+        // If on apex domain without tenant query parameter, this is Parent Site Context!
+        return null;
+    }
 
-        return $tenant;
+    /**
+     * Clear tenant context for parent site routes.
+     */
+    public static function clearTenantContext(): void
+    {
+        session()->forget(['tenant_id', 'active_tenant_slug']);
+        if (app()->bound('currentTenant')) {
+            app()->forgetInstance('currentTenant');
+        }
+        View::share('currentTenant', null);
     }
 
     /**
@@ -110,50 +117,90 @@ class TenantResolver
         $tenant = static::getActiveTenantModel();
 
         if ($tenant) {
-            $brandHex = $tenant->brand_color ?? '#0284c7';
+            $brandHex = $tenant->brand_color ?? '#0056A2';
             return [
                 'id' => $tenant->id,
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
                 'domain' => $tenant->domain,
+                'custom_domain' => $tenant->custom_domain,
+                'category' => $tenant->category ?? 'Sports Venues & Facilities',
+                'tagline' => $tenant->tagline ?? 'Premier multi-tenant court booking & facility platform.',
+                'description' => $tenant->description,
                 'address' => $tenant->address ?? 'Colombo, Sri Lanka',
                 'phone' => $tenant->phone ?? '+94 11 234 5678',
                 'email' => $tenant->email ?? ('info@' . $tenant->slug . '.lk'),
+                'opening_hours' => $tenant->opening_hours ?? 'Mon - Sun: 6:00 AM - 10:00 PM',
                 'brand_color' => $brandHex,
                 'primary_hex' => $brandHex,
                 'primary_hover' => $brandHex,
                 'primary_light' => '#f0f9ff',
                 'accent_hex' => '#0f172a',
                 'logo_url' => $tenant->logo_url,
+                'favicon_url' => $tenant->favicon_url,
                 'logo_initial' => strtoupper(substr($tenant->name, 0, 1)),
                 'badge' => $tenant->name,
-                'hero_title' => 'Reserve Premium ' . $tenant->name . ' Courts Online',
-                'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated lighting and court scheduling.',
-                'tagline' => 'Premier multi-tenant court booking & facility platform.',
+                'hero_title' => $tenant->hero_headline ?? ('Reserve Premium ' . $tenant->name . ' Courts Online'),
+                'hero_subtitle' => $tenant->hero_subheading ?? ('Instant real-time booking for ' . $tenant->name . ' with automated lighting and court scheduling.'),
+                'hero_image_url' => $tenant->hero_image_url ?? '/images/hero_sports_court.png',
+                'hero_highlights' => $tenant->hero_highlights ?? [],
+                'notices' => $tenant->notices ?? [
+                    ['title' => 'Court Booking Rules', 'link' => '#', 'icon' => 'document-text'],
+                    ['title' => 'Redeem Member Voucher', 'link' => '#', 'icon' => 'ticket'],
+                ],
+                'nav_settings' => $tenant->nav_settings ?? [
+                    'show_courts' => true,
+                    'show_pricing' => true,
+                    'show_passes' => true,
+                    'show_rules' => true,
+                    'show_contact' => true,
+                ],
                 'sports' => ['Tennis', 'Padel', 'Badminton', 'Squash'],
                 'theme_settings' => $tenant->theme_settings ?? [],
             ];
         }
 
-        return config('tenants.colombo-courts-club', [
+        $brandHex = '#0056A2';
+        return [
             'id' => 1,
             'name' => 'Colombo Courts Club',
             'slug' => 'colombo-courts-club',
+            'domain' => 'colombo-courts-club.localhost',
+            'custom_domain' => null,
+            'category' => 'Sports Venues & Facilities',
+            'tagline' => 'Premier multi-tenant court booking & facility platform.',
+            'description' => 'Multi-court badminton, tennis, and padel arena.',
             'address' => '45 Maitland Crescent, Colombo 00700, Sri Lanka',
             'phone' => '+94 11 234 5678',
             'email' => 'info@colombocourts.lk',
-            'brand_color' => '#0284c7',
-            'primary_hex' => '#0284c7',
-            'primary_hover' => '#0369a1',
+            'opening_hours' => 'Mon - Sun: 6:00 AM - 10:00 PM',
+            'brand_color' => $brandHex,
+            'primary_hex' => $brandHex,
+            'primary_hover' => $brandHex,
             'primary_light' => '#f0f9ff',
             'accent_hex' => '#0f172a',
+            'logo_url' => null,
+            'favicon_url' => null,
             'logo_initial' => 'C',
             'badge' => 'Colombo Courts Club',
             'hero_title' => 'Reserve Premium Colombo Courts Online',
-            'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash.',
-            'tagline' => 'Premier multi-tenant court booking & facility platform.',
+            'hero_subtitle' => 'Instant real-time booking for Tennis, Padel, Badminton & Squash with automated lighting and court scheduling.',
+            'hero_image_url' => '/images/hero_sports_court.png',
+            'hero_highlights' => [],
+            'notices' => [
+                ['title' => 'Court Booking Rules', 'link' => '#', 'icon' => 'document-text'],
+                ['title' => 'Redeem Member Voucher', 'link' => '#', 'icon' => 'ticket'],
+            ],
+            'nav_settings' => [
+                'show_courts' => true,
+                'show_pricing' => true,
+                'show_passes' => true,
+                'show_rules' => true,
+                'show_contact' => true,
+            ],
             'sports' => ['Tennis', 'Padel', 'Badminton', 'Squash'],
-        ]);
+            'theme_settings' => [],
+        ];
     }
 
     public static function getAllTenants()
