@@ -246,17 +246,41 @@ class SuperAdminController extends Controller
 
         $tenant = Tenant::findOrFail($id);
 
-        // Find Owner or Manager of target tenant
-        $targetUser = User::where('tenant_id', '=', $tenant->id, 'and')
-            ->whereIn('role', ['owner', 'manager'], 'and')
+        // Find Owner or Manager of target tenant without global tenant scope
+        $targetUser = User::withoutGlobalScopes()
+            ->where('tenant_id', '=', $tenant->id, 'and')
+            ->whereIn('role', ['owner', 'manager'], 'and', false)
             ->first();
 
         if (!$targetUser) {
-            $targetUser = User::where('tenant_id', '=', $tenant->id, 'and')->first();
+            $targetUser = User::withoutGlobalScopes()
+                ->where('tenant_id', '=', $tenant->id, 'and')
+                ->first();
         }
 
         if (!$targetUser) {
-            return back()->with('error', "Cannot impersonate '{$tenant->name}': No user accounts exist for this facility.");
+            // Auto-provision Owner Account for this tenant on demand so impersonation never fails
+            $ownerRole = Role::where('tenant_id', '=', $tenant->id, 'and')->where('slug', '=', 'owner', 'and')->first();
+            if (!$ownerRole) {
+                $ownerRole = Role::create([
+                    'tenant_id' => $tenant->id,
+                    'name' => 'Owner',
+                    'slug' => 'owner',
+                    'description' => 'Full administrative control over facility settings.',
+                    'permissions' => ['all' => true],
+                ]);
+            }
+
+            $targetUser = User::create([
+                'tenant_id' => $tenant->id,
+                'name' => $tenant->name . ' Owner',
+                'email' => 'owner@' . $tenant->slug . '.lk',
+                'password' => bcrypt('password123'),
+                'role' => 'owner',
+                'is_super_admin' => false,
+            ]);
+
+            $targetUser->roles()->attach($ownerRole);
         }
 
         // Write Audit Log Entry
