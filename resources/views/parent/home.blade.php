@@ -1,30 +1,30 @@
 <x-layouts.parent title="BookFlow | Universal Booking & Space Management Platform by SLTDS">
 
-    <!-- SECTION 1: VADEL-INSPIRED FULL-SCREEN HERO CANVAS (FITS SCREEN ON LOAD) -->
-    <div class="p-3 sm:p-4 bg-slate-50 h-[calc(100vh-4.5rem)] min-h-135 max-h-230">
-        <section class="relative rounded-4xl sm:rounded-5xl overflow-hidden h-full flex flex-col justify-center items-center p-6 sm:p-10 shadow-2xl bg-slate-950 text-white">
+    <!-- SECTION 1: VADEL-INSPIRED FULL-SCREEN HERO CANVAS (100% SINGLE VIEWPORT FIT ON LOAD & FLUSH TOP MERGE) -->
+    <div class="px-2 sm:px-3 pb-2 sm:pb-3 pt-0 bg-slate-50 h-[calc(100vh-4rem)] overflow-hidden">
+        <section class="relative rounded-3xl sm:rounded-4xl overflow-hidden h-full flex flex-col justify-center items-center p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] bg-slate-950 text-white">
             
             <!-- High-Res VADEL Style Sports Court Background Image -->
             <img src="/images/vadel_hero_court.png" alt="Indoor Sports Court Facility" class="absolute inset-0 w-full h-full object-cover z-0 opacity-80 scale-105">
-            <div class="absolute inset-0 bg-linear-to-b from-slate-950/40 via-slate-950/20 to-slate-950/60 z-0"></div>
+            <div class="absolute inset-0 bg-linear-to-b from-slate-950/50 via-slate-950/20 to-slate-950/70 z-0"></div>
 
             <!-- Center Display Title & Tagline (Scaled for Single Viewport Fit) -->
             <div class="relative z-10 my-auto text-center space-y-4 sm:space-y-6 max-w-5xl mx-auto px-4">
 
-                <h1 class="text-6xl sm:text-8xl lg:text-9xl xl:text-[9.5rem] font-black italic tracking-tighter text-white uppercase drop-shadow-2xl leading-none">
+                <h1 class="text-5xl sm:text-7xl lg:text-8xl xl:text-[9rem] font-black italic tracking-tighter text-white uppercase drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)] leading-none">
                     BOOKFLOW
                 </h1>
 
-                <p class="text-sm sm:text-xl lg:text-2xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed tracking-wide drop-shadow-md">
-                    The all-in-one operating system for sports venues. Automate bookings, manage members, and scale your revenue with zero hassle.
+                <p class="text-sm sm:text-lg lg:text-xl text-slate-200 max-w-2xl mx-auto font-normal leading-relaxed tracking-wide drop-shadow-md">
+                    The all-in-one operating system for sports venues. Automate court bookings, manage member passes, and scale your revenue with zero hassle.
                 </p>
 
-                <div class="pt-2 sm:pt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                    <a href="{{ route('tenant.register') }}" class="px-7 sm:px-8 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-black text-slate-950 bg-white hover:bg-slate-100 shadow-[0_10px_25px_-5px_rgba(255,255,255,0.4)] transition-all hover:scale-105">
+                <div class="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+                    <a href="{{ route('tenant.register') }}" class="px-8 py-3.5 rounded-full text-xs sm:text-sm font-black text-slate-950 bg-white hover:bg-slate-100 shadow-[0_10px_30px_-5px_rgba(255,255,255,0.5)] transition-all hover:scale-105">
                         Register Venue &rarr;
                     </a>
                     <!-- Liquid Glass CTA Button -->
-                    <a href="{{ route('parent.features') }}" class="px-7 sm:px-8 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-black text-white bg-white/15 hover:bg-white/25 backdrop-blur-2xl border border-white/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_25px_-5px_rgba(0,0,0,0.3)] transition-all hover:scale-105">
+                    <a href="{{ route('parent.features') }}" class="px-8 py-3.5 rounded-full text-xs sm:text-sm font-black text-white bg-white/15 hover:bg-white/25 backdrop-blur-2xl border border-white/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_25px_-5px_rgba(0,0,0,0.4)] transition-all hover:scale-105">
                         Explore Features
                     </a>
                 </div>

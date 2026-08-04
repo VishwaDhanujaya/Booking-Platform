@@ -1,8 +1,8 @@
 <x-layouts.parent title="Platform SaaS Pricing Plans | BookFlow by SLTDS">
 
     <!-- PAGE HERO CANVAS (Features Inspired Minimalist Dark VADEL Aesthetic) -->
-    <div class="p-3 sm:p-4 bg-slate-50">
-        <section class="relative rounded-4xl sm:rounded-5xl overflow-hidden py-16 sm:py-24 flex flex-col justify-center items-center p-6 sm:p-10 shadow-2xl bg-slate-950 text-white">
+    <div class="px-2 sm:px-3 pb-2 sm:pb-3 pt-0 bg-slate-50">
+        <section class="relative rounded-3xl sm:rounded-4xl overflow-hidden py-16 sm:py-24 flex flex-col justify-center items-center p-6 sm:p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] bg-slate-950 text-white">
             
             <!-- High-Res Background Image -->
             <img src="/images/contact_stadium_lights.png" alt="Sports Facility Lights" class="absolute inset-0 w-full h-full object-cover z-0 opacity-75 scale-105">

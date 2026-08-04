@@ -89,15 +89,68 @@ class PublicBookingController extends Controller
                 ->where('date', '=', $selectedDate->toDateString())
                 ->orderBy('start_time')
                 ->get();
+
+            // Auto-provision 16 hourly slots (6:00 AM - 10:00 PM) if none exist for court/date
+            if ($timeSlots->isEmpty()) {
+                for ($hour = 6; $hour < 22; $hour++) {
+                    $start = sprintf('%02d:00', $hour);
+                    $end = sprintf('%02d:00', $hour + 1);
+                    $isPeak = ($hour >= 17);
+                    $price = $isPeak ? ($selectedCourt->peak_hourly_rate ?? $selectedCourt->hourly_rate * 1.2) : $selectedCourt->hourly_rate;
+
+                    TimeSlot::create([
+                        'tenant_id' => $tenant->id,
+                        'court_id' => $selectedCourt->id,
+                        'date' => $selectedDate->toDateString(),
+                        'start_time' => $start,
+                        'end_time' => $end,
+                        'status' => 'available',
+                        'is_peak' => $isPeak,
+                        'price' => $price,
+                    ]);
+                }
+
+                $timeSlots = TimeSlot::where('court_id', '=', $selectedCourt->id)
+                    ->where('date', '=', $selectedDate->toDateString())
+                    ->orderBy('start_time')
+                    ->get();
+            }
         }
 
         $allCourtsTimeSlots = [];
         if ($courts->isNotEmpty()) {
             foreach ($courts as $court) {
-                $allCourtsTimeSlots[$court->id] = TimeSlot::where('court_id', '=', $court->id)
+                $slots = TimeSlot::where('court_id', '=', $court->id)
                     ->where('date', '=', $selectedDate->toDateString())
                     ->orderBy('start_time')
                     ->get();
+
+                if ($slots->isEmpty()) {
+                    for ($hour = 6; $hour < 22; $hour++) {
+                        $start = sprintf('%02d:00', $hour);
+                        $end = sprintf('%02d:00', $hour + 1);
+                        $isPeak = ($hour >= 17);
+                        $price = $isPeak ? ($court->peak_hourly_rate ?? $court->hourly_rate * 1.2) : $court->hourly_rate;
+
+                        TimeSlot::create([
+                            'tenant_id' => $tenant->id,
+                            'court_id' => $court->id,
+                            'date' => $selectedDate->toDateString(),
+                            'start_time' => $start,
+                            'end_time' => $end,
+                            'status' => 'available',
+                            'is_peak' => $isPeak,
+                            'price' => $price,
+                        ]);
+                    }
+
+                    $slots = TimeSlot::where('court_id', '=', $court->id)
+                        ->where('date', '=', $selectedDate->toDateString())
+                        ->orderBy('start_time')
+                        ->get();
+                }
+
+                $allCourtsTimeSlots[$court->id] = $slots;
             }
         }
 

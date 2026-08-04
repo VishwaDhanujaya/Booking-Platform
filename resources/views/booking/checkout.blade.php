@@ -1,20 +1,23 @@
 <x-layouts.app title="Checkout & Booking Confirmation | {{ $tenant->name }}">
 
-    <!-- Page Banner -->
-    <section class="bg-slate-900 text-white py-8 border-b border-slate-800">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <span class="text-xs font-bold text-brand-400 uppercase tracking-wider">Step-by-Step Checkout</span>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Complete Your Court Booking</h1>
-                </div>
+    <!-- Page Banner (VADEL Liquid Glass Aesthetic - Flush Top Alignment) -->
+    <div class="px-2 sm:px-3 pb-2 sm:pb-3 pt-0 bg-slate-50">
+        <section class="relative rounded-3xl sm:rounded-4xl overflow-hidden py-10 sm:py-12 p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] bg-slate-950 text-white">
+            <div class="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-900/90 to-slate-950 z-0"></div>
+            <div class="relative z-10 max-w-5xl mx-auto w-full">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-black text-slate-300 uppercase tracking-widest">Step-by-Step Checkout</span>
+                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg">Complete Your Court Booking</h1>
+                    </div>
 
-                <a href="{{ route('booking.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
-                    &larr; Back to Availability Calendar
-                </a>
+                    <a href="{{ route('booking.index') }}" class="inline-flex items-center gap-2 text-xs font-black text-slate-950 bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full shadow-md transition-all hover:scale-105">
+                        &larr; Back to Calendar
+                    </a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
     <!-- Main Checkout Section with Alpine.js Wizard & Pricing Engine -->
     <section x-data="{

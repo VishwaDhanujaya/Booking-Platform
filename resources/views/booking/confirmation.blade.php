@@ -1,29 +1,37 @@
-<x-layouts.app title="Booking Confirmed | Colombo Courts Club">
+@php
+    $tenant = \App\Services\TenantResolver::getActiveTenant();
+    $tenantName = $tenant['name'];
+    $tenantAddress = $tenant['address'] ?? 'Colombo, Sri Lanka';
+@endphp
+<x-layouts.app title="Booking Confirmed | {{ $tenantName }}">
 
-    <!-- Confirmation Banner -->
-    <section class="bg-slate-900 text-white py-12 border-b border-slate-800 text-center">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-            
-            <!-- Success Icon Badge -->
-            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10 animate-bounce">
-                <svg class="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
+    <!-- Confirmation Banner (VADEL Liquid Glass Aesthetic - Flush Top Alignment) -->
+    <div class="px-2 sm:px-3 pb-2 sm:pb-3 pt-0 bg-slate-50">
+        <section class="relative rounded-3xl sm:rounded-4xl overflow-hidden py-12 sm:py-14 p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] bg-slate-950 text-white text-center">
+            <div class="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-900/90 to-slate-950 z-0"></div>
+            <div class="relative z-10 max-w-3xl mx-auto space-y-5">
+                
+                <!-- Success Icon Badge (Liquid Glass Circle) -->
+                <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 flex items-center justify-center mx-auto shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-xl">
+                    <svg class="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
 
-            <div class="space-y-1">
-                <span class="text-xs font-bold text-accent-400 uppercase tracking-widest">Reservation Successful</span>
-                <h1 class="text-3xl sm:text-4xl font-black text-white">Your Court is Locked & Ready!</h1>
-                <p class="text-sm text-slate-300">We've sent a digital gate pass & receipt to <strong class="text-white">{{ $booking->customer_email }}</strong>.</p>
-            </div>
-            
-            <div class="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-full px-4 py-1.5 text-xs">
-                <span class="text-slate-400">Booking Reference:</span>
-                <strong class="text-brand-300 font-mono font-bold tracking-wider">{{ $booking->booking_reference }}</strong>
-            </div>
+                <div class="space-y-1.5">
+                    <span class="text-xs font-black text-slate-300 uppercase tracking-widest block">{{ $tenantName }} Reservation</span>
+                    <h1 class="text-3xl sm:text-5xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg">Your Court is Locked & Ready</h1>
+                    <p class="text-xs sm:text-sm text-slate-300">We've dispatched your digital pass & receipt to <strong class="text-white font-extrabold">{{ $booking->customer_email }}</strong>.</p>
+                </div>
+                
+                <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full px-5 py-2 text-xs shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                    <span class="text-slate-300 font-medium">Booking Ref:</span>
+                    <strong class="text-white font-mono font-black tracking-wider">{{ $booking->booking_reference }}</strong>
+                </div>
 
-        </div>
-    </section>
+            </div>
+        </section>
+    </div>
 
     <!-- Confirmation Details & Digital QR Pass -->
     <section class="py-12 bg-slate-50 min-h-screen">
@@ -31,13 +39,13 @@
 
             <!-- Digital QR Pass Card -->
             <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-2xl space-y-8 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
 
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-100">
                     <div>
-                        <span class="text-xs font-bold text-brand-600 uppercase tracking-wider">Official Digital Access Pass</span>
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Official Digital Access Pass</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-1">{{ $booking->court ? $booking->court->name : 'Center Court' }}</h2>
-                        <p class="text-xs text-slate-500 font-medium">Colombo Courts Club &bull; 45 Maitland Crescent, Colombo 07</p>
+                        <p class="text-xs text-slate-500 font-medium">{{ $booking->tenant->name ?? $tenantName }} &bull; {{ $booking->tenant->address ?? $tenantAddress }}</p>
                     </div>
 
                     <!-- Mock QR Code Box -->

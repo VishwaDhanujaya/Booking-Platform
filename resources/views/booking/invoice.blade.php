@@ -44,11 +44,11 @@
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b border-slate-100 pb-8">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-xl flex items-center justify-center tracking-tighter">
-                        CCC
+                    <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-xl flex items-center justify-center tracking-tighter shadow-md">
+                        {{ strtoupper(substr($booking->tenant->name ?? 'V', 0, 1)) }}
                     </div>
                     <div>
-                        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $booking->tenant->name ?? 'Colombo Courts Club' }}</h1>
+                        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $booking->tenant->name ?? 'Venue Operations' }}</h1>
                         <p class="text-xs text-slate-500 font-medium">Premier Sports Facility & Venue</p>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
         <!-- Footer -->
         <div class="pt-8 border-t border-slate-100 text-center space-y-1">
             <p class="text-xs font-bold text-slate-700">Official Computer-Generated Tax Invoice & Receipt</p>
-            <p class="text-[11px] text-slate-400">Colombo Courts Club &bull; Facility Booking System &bull; Gate Pass Reference: {{ $booking->booking_reference }}</p>
+            <p class="text-[11px] text-slate-400">{{ $booking->tenant->name ?? 'Venue Facility' }} &bull; Gate Pass Reference: {{ $booking->booking_reference }}</p>
         </div>
 
     </div>

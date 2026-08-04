@@ -1,4 +1,8 @@
-<x-layouts.app title="My Account & Bookings | Colombo Courts Club">
+@php
+    $tenant = \App\Services\TenantResolver::getActiveTenant();
+    $tenantName = $tenant['name'];
+@endphp
+<x-layouts.app title="My Account & Bookings | {{ $tenantName }}">
 
     <!-- Page Header & Customer Profile Banner -->
     <section class="bg-slate-900 text-white py-10 border-b border-slate-800">

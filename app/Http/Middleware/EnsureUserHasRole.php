@@ -33,7 +33,7 @@ class EnsureUserHasRole
         }
 
         // Super admin bypasses all role restrictions
-        if ($user->role === 'super_admin') {
+        if ($user->isSuperAdmin()) {
             return $next($request);
         }
 

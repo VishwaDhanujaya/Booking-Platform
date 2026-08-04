@@ -1,8 +1,8 @@
 <x-layouts.parent title="Live Venues Directory | BookFlow by SLTDS">
 
     <!-- PAGE HERO CANVAS (Features Inspired Minimalist Dark VADEL Aesthetic) -->
-    <div class="p-3 sm:p-4 bg-slate-50">
-        <section class="relative rounded-4xl sm:rounded-5xl overflow-hidden py-16 sm:py-24 flex flex-col justify-center items-center p-6 sm:p-10 shadow-2xl bg-slate-950 text-white">
+    <div class="px-2 sm:px-3 pb-2 sm:pb-3 pt-0 bg-slate-50">
+        <section class="relative rounded-3xl sm:rounded-4xl overflow-hidden py-16 sm:py-24 flex flex-col justify-center items-center p-6 sm:p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] bg-slate-950 text-white">
             
             <!-- High-Res Background Image -->
             <img src="/images/vadel_hero_court.png" alt="Indoor Sports Court Facility" class="absolute inset-0 w-full h-full object-cover z-0 opacity-75 scale-105">
@@ -10,8 +10,9 @@
 
             <!-- Header Content -->
             <div class="relative z-10 text-center space-y-4 sm:space-y-6 max-w-4xl mx-auto px-4">
-                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black italic tracking-tighter text-white uppercase drop-shadow-2xl leading-tight">
-                    Live Sports Venues & Operating Facilities
+                
+                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black italic tracking-tighter text-white uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] leading-tight">
+                    Live Sports Venues & Facilities
                 </h1>
 
                 <p class="text-xs sm:text-base text-slate-200 max-w-2xl mx-auto font-normal leading-relaxed tracking-wide drop-shadow-md">

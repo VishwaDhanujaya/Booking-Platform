@@ -15,7 +15,24 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->isSuperAdmin()) {
+                return redirect()->route('superadmin.dashboard');
+            }
+            if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk'])) {
+                return redirect(TenantResolver::tenantUrl('admin.dashboard'));
+            }
+            return redirect(TenantResolver::tenantUrl('customer.my-bookings'));
+        }
+
         $tenant = TenantResolver::getActiveTenantModel();
+
+        // 1. If on the parent domain (no tenant), strictly enforce platform admin login
+        if (!$tenant) {
+            return redirect()->route('superadmin.login');
+        }
+
         return view('auth.login', compact('tenant'));
     }
 
@@ -33,6 +50,13 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        // If a user is already logged in as a different account, flush session first
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withInput($request->only('email'))->withErrors([
@@ -54,13 +78,13 @@ class AuthController extends Controller
             ]);
         }
 
-        // 2. Super Admin Access -> Always redirect to SLTDS Platform Admin (/platform-admin)
+        // 2. Super Admin -> Always redirect to SLTDS Platform Admin (/platform-admin)
         if ($user->isSuperAdmin()) {
             Log::info("Super Admin logged in: {$user->email}");
             return redirect()->route('superadmin.dashboard');
         }
 
-        // 3. Tenant scope validation for regular users
+        // 3. Tenant scope validation if logged in on a specific tenant subdomain
         $activeTenant = TenantResolver::resolve($request);
         if ($activeTenant && $user->tenant_id && (int) $user->tenant_id !== (int) $activeTenant->id) {
             $userTenant = \App\Models\Tenant::find($user->tenant_id, ['*']);
@@ -75,26 +99,31 @@ class AuthController extends Controller
         }
 
         // 4. Automatically bind tenant context for tenant users
-        if ($user->tenant_id) {
-            $userTenant = \App\Models\Tenant::find($user->tenant_id, ['*']);
-            if ($userTenant) {
-                TenantResolver::setActiveTenantContext($userTenant);
-            }
+        $userTenant = $user->tenant ?? TenantResolver::getActiveTenantModel();
+        if ($userTenant) {
+            TenantResolver::setActiveTenantContext($userTenant);
         }
 
         Log::info("User logged in successfully: {$user->email} [Role: {$user->role}]");
 
-        if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'platform_admin'])) {
-            $userTenant = $user->tenant ?? TenantResolver::getActiveTenantModel();
+        // 5. Tenant Staff / Owner / Manager -> Tenant Admin Dashboard (subdomain /admin)
+        if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk'])) {
             return redirect(TenantResolver::tenantUrl('admin.dashboard', [], $userTenant));
         }
 
-        return redirect(TenantResolver::tenantUrl('customer.my-bookings'));
+        // 6. Customer -> Customer My Bookings Portal (subdomain /my-account)
+        return redirect(TenantResolver::tenantUrl('customer.my-bookings', [], $userTenant));
     }
 
     public function showRegister()
     {
         $tenant = TenantResolver::getActiveTenantModel();
+
+        // 1. If on the parent domain (no tenant), strictly enforce business registration
+        if (!$tenant) {
+            return redirect()->route('tenant.register');
+        }
+
         return view('auth.register', compact('tenant'));
     }
 
