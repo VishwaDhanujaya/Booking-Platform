@@ -11,6 +11,9 @@ class IdentifyTenant
 {
     /**
      * Handle an incoming request.
+     * Runs on every web request — resolves the current tenant from the Host
+     * header (subdomain) and, in local/testing environments only, from the
+     * ?tenant= query param.
      */
     public function handle(Request $request, Closure $next): Response
     {

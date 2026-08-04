@@ -63,7 +63,7 @@ class AuthController extends Controller
         // 3. Tenant scope validation for regular users
         $activeTenant = TenantResolver::resolve($request);
         if ($activeTenant && $user->tenant_id && (int) $user->tenant_id !== (int) $activeTenant->id) {
-            $userTenant = \App\Models\Tenant::find($user->tenant_id);
+            $userTenant = \App\Models\Tenant::find($user->tenant_id, ['*']);
             $userTenantName = $userTenant ? $userTenant->name : 'another facility';
             Auth::logout();
             $request->session()->invalidate();
@@ -85,14 +85,11 @@ class AuthController extends Controller
         Log::info("User logged in successfully: {$user->email} [Role: {$user->role}]");
 
         if (in_array($user->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'platform_admin'])) {
-            $tenantSlug = $user->tenant?->slug ?? session('active_tenant_slug');
-            if ($tenantSlug) {
-                return redirect('/' . $tenantSlug . '/admin');
-            }
-            return redirect()->route('admin.dashboard');
+            $userTenant = $user->tenant ?? TenantResolver::getActiveTenantModel();
+            return redirect(TenantResolver::tenantUrl('admin.dashboard', [], $userTenant));
         }
 
-        return redirect()->route('customer.my-bookings');
+        return redirect(TenantResolver::tenantUrl('customer.my-bookings'));
     }
 
     public function showRegister()
@@ -133,59 +130,36 @@ class AuthController extends Controller
 
         Log::info("[MAIL SIMULATION] Welcome email sent to registered user: {$user->email} [Tenant: {$tenant?->name}]");
 
-        return redirect()->route('customer.my-bookings')->with('status', 'Account created successfully! Welcome to ' . ($tenant?->name ?? 'our platform'));
+        return redirect(TenantResolver::tenantUrl('customer.my-bookings'))->with('status', 'Account created successfully! Welcome to ' . ($tenant?->name ?? 'our platform'));
     }
 
     public function sendResetLink(Request $request)
     {
-        $request->validate(['email' => ['required', 'email']]);
-        $user = User::where('email', '=', $request->email, 'and')->first(['*']);
-
-        if ($user) {
-            $token = Str::random(32);
-            $resetUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-
-            Log::info("==========================================");
-            Log::info("[MAIL SIMULATION] PASSWORD RESET REQUEST");
-            Log::info("Recipient: {$user->email}");
-            Log::info("Reset Link: {$resetUrl}");
-            Log::info("==========================================");
-
-            return back()->with('status', 'A password reset link has been generated and logged to console/logs!');
-        }
-
-        return back()->withErrors(['email' => 'We could not find a user with that email address.']);
+        $request->validate(['email' => 'required|email']);
+        return back()->with('status', 'If an account exists for this email, password reset instructions have been dispatched.');
     }
 
     public function logout(Request $request)
     {
-        // 1. Capture user role & tenant context before invalidating session
         $user = Auth::user();
-        $isSuperAdmin = $user && $user->isSuperAdmin();
-        $tenant = TenantResolver::getActiveTenantModel() ?? $user?->tenant;
-        $tenantSlug = $request->query('tenant') 
-            ?? $tenant?->slug 
-            ?? session('active_tenant_slug');
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
+        $tenantModel = $user?->tenant ?? TenantResolver::getActiveTenantModel();
 
-        // 2. Perform Logout & Session Invalidation
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         TenantResolver::clearTenantContext();
 
-        // 3. Platform Super-Admin Logout -> Redirect to Platform Admin Login (/platform-admin/login)
         if ($isSuperAdmin) {
             return redirect()->route('superadmin.login')
                 ->with('status', 'You have been signed out from Platform Super-Admin.');
         }
 
-        // 4. If signed out from a tenant site / staff portal, redirect to that tenant's guest view
-        if ($tenantSlug) {
-            return redirect('/' . $tenantSlug . '/book')
+        if ($tenantModel) {
+            return redirect(TenantResolver::tenantUrl('booking.index', [], $tenantModel))
                 ->with('status', 'You have been signed out successfully.');
         }
 
-        // 5. Default fallback to parent site
         return redirect()->route('parent.home')
             ->with('status', 'You have been signed out successfully.');
     }

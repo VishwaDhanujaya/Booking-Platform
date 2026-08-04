@@ -18,14 +18,18 @@ trait BelongsToTenant
     protected static function bootBelongsToTenant(): void
     {
         static::creating(function ($model) {
-            if (!$model->tenant_id && session()->has('tenant_id')) {
-                $model->tenant_id = session('tenant_id');
+            if (!$model->tenant_id) {
+                $tenant = \App\Services\TenantResolver::getActiveTenantModel();
+                if ($tenant) {
+                    $model->tenant_id = $tenant->id;
+                }
             }
         });
 
         static::addGlobalScope('tenant', function (Builder $builder) {
-            if (session()->has('tenant_id')) {
-                $builder->where($builder->getQuery()->from . '.tenant_id', '=', session('tenant_id'));
+            $tenant = \App\Services\TenantResolver::getActiveTenantModel();
+            if ($tenant) {
+                $builder->where($builder->getQuery()->from . '.tenant_id', '=', $tenant->id);
             }
         });
     }

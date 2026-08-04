@@ -85,7 +85,7 @@
 
         </div>
 
-        <!-- 2 Column Layout: Recent Tenants & Recent Users -->
+        <!-- 2 Column Layout: Recent Tenants & Audit Logs -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             <!-- Left Column: Recent Tenants -->
@@ -130,8 +130,8 @@
                                         @endif
                                     </td>
                                     <td class="py-3.5 text-right">
-                                        <a href="{{ route('superadmin.tenants.users', $tenant->id) }}" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
-                                            Users &rarr;
+                                        <a href="{{ route('superadmin.tenants') }}" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-sltds-endeavour bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
+                                            Manage &rarr;
                                         </a>
                                     </td>
                                 </tr>
@@ -141,37 +141,38 @@
                 </div>
             </div>
 
-            <!-- Right Column: Recent Tenant Users -->
+            <!-- Right Column: Platform Quick Stats -->
             <div class="lg:col-span-5 bg-white border-2 border-slate-200/80 rounded-3xl p-6 space-y-6 shadow-sm">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-900">Recent Tenant Users & Staff</h3>
-                    <p class="text-xs text-slate-500">Latest user accounts registered across all facilities.</p>
+                    <h3 class="text-lg font-bold text-slate-900">Platform Overview</h3>
+                    <p class="text-xs text-slate-500">Key subscription and tenant health metrics.</p>
                 </div>
 
-                @if($recentUsers->isEmpty())
-                    <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
-                        No tenant user accounts recorded yet.
-                    </div>
-                @else
-                    <div class="space-y-3 max-h-95 overflow-y-auto pr-1">
-                        @foreach($recentUsers as $u)
-                            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-xs">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-bold text-slate-900">{{ $u->name }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-50 text-sltds-endeavour border border-blue-200">
-                                        {{ str_replace('_', ' ', $u->role) }}
-                                    </span>
-                                </div>
-                                <div class="text-slate-600">
-                                    Email: <strong class="text-slate-800">{{ $u->email }}</strong>
-                                </div>
-                                <div class="text-[10px] text-slate-400 font-medium">
-                                    Facility: <span class="text-sltds-endeavour font-bold">{{ $u->tenant->name ?? 'System' }}</span>
-                                </div>
+                <div class="space-y-3">
+                    @foreach($recentTenants->take(5) as $tenant)
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">{{ $tenant->name }}</div>
+                                <div class="text-[10px] font-mono text-slate-400">{{ $tenant->slug }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</div>
                             </div>
-                        @endforeach
-                    </div>
-                @endif
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase
+                                    {{ $tenant->subscription_plan === 'enterprise' ? 'bg-purple-50 text-purple-700 border border-purple-200' : ($tenant->subscription_plan === 'pro' ? 'bg-blue-50 text-sltds-endeavour border border-blue-200' : 'bg-slate-100 text-slate-600 border border-slate-200') }}">
+                                    {{ $tenant->subscription_plan }}
+                                </span>
+                                @if($tenant->is_active)
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block" title="Active"></span>
+                                @else
+                                    <span class="w-2 h-2 rounded-full bg-rose-400 inline-block" title="Suspended"></span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <a href="{{ route('superadmin.tenants') }}" class="block text-center text-xs font-bold text-sltds-endeavour hover:underline pt-1">
+                    View all tenants &rarr;
+                </a>
             </div>
 
         </div>

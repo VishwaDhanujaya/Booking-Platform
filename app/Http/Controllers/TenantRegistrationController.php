@@ -32,8 +32,6 @@ class TenantRegistrationController extends Controller
 
         Auth::login($owner);
         $request->session()->regenerate();
-        TenantResolver::setActiveTenantContext($tenant);
-
-        return redirect()->route('admin.dashboard')->with('status', "Welcome to your new venue portal! '{$tenant->name}' has been created with starter courts & bookable slots.");
+        return redirect(TenantResolver::tenantUrl('admin.dashboard', [], $tenant))->with('status', "Welcome to your new venue portal! '{$tenant->name}' has been created with starter courts & bookable slots.");
     }
 }

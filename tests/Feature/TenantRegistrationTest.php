@@ -71,7 +71,8 @@ class TenantRegistrationTest extends TestCase
             'password' => 'secret123',
         ]);
 
-        $response->assertRedirect(route('admin.dashboard'));
+        $tenant = Tenant::where('slug', '=', 'lanka-padel', 'and')->first(['*']);
+        $response->assertRedirect(\App\Services\TenantResolver::tenantUrl('admin.dashboard', [], $tenant));
         $this->assertAuthenticated();
 
         $tenant = Tenant::where('slug', '=', 'lanka-padel', 'and')->first();

@@ -64,7 +64,7 @@
                 <select onchange="window.location.href = this.value" 
                         class="bg-slate-900 text-white text-xs font-bold py-1 px-3 rounded-xl border border-slate-700">
                     @foreach($allTenants as $t)
-                        <option value="{{ url('/' . $t->slug . '/book') }}" {{ $tenantSlug === $t->slug ? 'selected' : '' }}>
+                        <option value="{{ \App\Services\TenantResolver::tenantUrl('booking.index', [], $t) }}" {{ $tenantSlug === $t->slug ? 'selected' : '' }}>
                             {{ $t->name }} ({{ $t->slug }})
                         </option>
                     @endforeach
@@ -99,7 +99,7 @@
                 
                 <!-- Logo & Dynamic Tenant Identity -->
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('booking.index', request()->only('tenant')) }}" class="group flex items-center gap-3">
+                    <a href="@tenantUrl('booking.index')" class="group flex items-center gap-3">
                         @if($logoUrl)
                             <img src="{{ $logoUrl }}" alt="{{ $tenantName }}" class="h-12 max-w-55 object-contain">
                         @else
@@ -120,18 +120,18 @@
 
                 <!-- Primary Desktop Nav (Controlled by Tenant Nav Settings) -->
                 <nav class="hidden md:flex items-center gap-8">
-                    <a href="{{ route('booking.index', request()->only('tenant')) }}" class="text-sm font-bold {{ request()->routeIs('booking.*') && !request()->routeIs('pricing') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('booking.*') && !request()->routeIs('pricing') ? 'border-color:' . $brandColor : '' }}">
+                    <a href="@tenantUrl('booking.index')" class="text-sm font-bold {{ request()->routeIs('booking.*') && !request()->routeIs('pricing') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('booking.*') && !request()->routeIs('pricing') ? 'border-color:' . $brandColor : '' }}">
                         Book a Court
                     </a>
 
                     @if(!isset($navSettings['show_pricing']) || $navSettings['show_pricing'])
-                        <a href="{{ route('pricing', request()->only('tenant')) }}" class="text-sm font-bold {{ request()->routeIs('pricing') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('pricing') ? 'border-color:' . $brandColor : '' }}">
+                        <a href="@tenantUrl('pricing')" class="text-sm font-bold {{ request()->routeIs('pricing') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('pricing') ? 'border-color:' . $brandColor : '' }}">
                             Pricing & Membership
                         </a>
                     @endif
 
                     @auth
-                        <a href="{{ route('customer.my-bookings', request()->only('tenant')) }}" class="text-sm font-bold {{ request()->routeIs('customer.*') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('customer.*') ? 'border-color:' . $brandColor : '' }}">
+                        <a href="@tenantUrl('customer.my-bookings')" class="text-sm font-bold {{ request()->routeIs('customer.*') ? 'text-slate-900 font-extrabold border-b-2' : 'text-slate-600 hover:text-slate-900' }} transition-colors py-1" style="{{ request()->routeIs('customer.*') ? 'border-color:' . $brandColor : '' }}">
                             My Account
                         </a>
                     @endauth
@@ -174,7 +174,7 @@
                                     <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="{{ route('customer.my-bookings') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                <a href="@tenantUrl('customer.my-bookings')" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                                     <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
@@ -182,7 +182,7 @@
                                 </a>
 
                                 @if(in_array(auth()->user()->role, ['owner', 'manager', 'trainer_staff', 'front_desk', 'super_admin']) || auth()->user()?->isSuperAdmin())
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                                    <a href="@tenantUrl('admin.dashboard')" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                                         <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         </svg>
@@ -204,7 +204,7 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('booking.index') }}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" style="background-color: {{ $brandColor }};">
+                        <a href="@tenantUrl('booking.index')" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" style="background-color: {{ $brandColor }};">
                             Book Court
                         </a>
                     @else
@@ -212,7 +212,7 @@
                         <a href="{{ route('login') }}" class="text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors px-3 py-2">
                             Sign In
                         </a>
-                        <a href="{{ route('booking.index') }}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" style="background-color: {{ $brandColor }};">
+                        <a href="@tenantUrl('booking.index')" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]" style="background-color: {{ $brandColor }};">
                             Book Court Now
                             <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -245,11 +245,11 @@
              x-transition:leave-start="opacity-100 translate-y-0" 
              x-transition:leave-end="opacity-0 -translate-y-4" 
              class="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-6 space-y-3 shadow-lg">
-            <a href="{{ route('booking.index', request()->only('tenant')) }}" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">Book a Court</a>
-            <a href="{{ route('pricing', request()->only('tenant')) }}" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">Pricing & Membership</a>
+            <a href="@tenantUrl('booking.index')" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">Book a Court</a>
+            <a href="@tenantUrl('pricing')" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">Pricing & Membership</a>
             
             @auth
-                <a href="{{ route('customer.my-bookings', request()->only('tenant')) }}" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">My Account</a>
+                <a href="@tenantUrl('customer.my-bookings')" class="block px-3 py-2 rounded-lg text-base font-bold text-slate-800 hover:bg-slate-50">My Account</a>
                 <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
                     <div class="px-3 py-2 bg-slate-50 rounded-xl">
                         <p class="text-xs font-bold text-slate-900">{{ auth()->user()->name }}</p>

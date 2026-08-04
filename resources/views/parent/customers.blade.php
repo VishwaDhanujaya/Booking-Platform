@@ -85,12 +85,12 @@
 
                             <!-- Action -->
                             <div class="pt-5 border-t border-slate-100 mt-5 space-y-2">
-                                <a href="{{ url('/' . $tenant->slug . '/book') }}"
+                                <a href="{{ \App\Services\TenantResolver::tenantUrl('booking.index', [], $tenant) }}"
                                    class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-sltds-endeavour hover:bg-sltds-sky shadow-md shadow-sltds-endeavour/20 transition-all">
                                     Launch Customer Site &rarr;
                                 </a>
                                 <div class="text-[10px] text-center text-slate-500 font-mono font-medium">
-                                    Domain: {{ $tenant->domain ?? ($tenant->slug . '.localhost') }}
+                                    Domain: {{ $tenant->domain ?? ($tenant->slug . '.' . parse_url(config('app.url'), PHP_URL_HOST)) }}
                                 </div>
                             </div>
 

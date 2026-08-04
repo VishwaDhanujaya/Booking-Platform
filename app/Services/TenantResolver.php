@@ -11,42 +11,41 @@ class TenantResolver
     /**
      * Resolve current tenant from Subdomain, Query Parameter, or Session.
      */
+    /**
+     * Resolve current tenant from Host Header (Subdomain / Custom Domain).
+     * In local/testing environments ONLY, allows ?tenant=slug query parameter override.
+     * Path-segment (/slug/) and Session-based tenant resolution are strictly REMOVED.
+     */
     public static function resolve(Request $request): ?Tenant
     {
         $tenant = null;
 
-        // 1. Explicit Query Param Override (?tenant=slug)
-        if ($request->has('tenant')) {
-            $slug = (string) $request->query('tenant');
-            $tenant = Tenant::where('slug', '=', $slug, 'and')->where('is_active', '=', true, 'and')->first(['*']);
-            if ($tenant) {
-                static::setActiveTenantContext($tenant);
-                return $tenant;
+        // 1. Local/Testing environment query param convenience (?tenant=slug)
+        if (app()->environment('local', 'testing') && $request->has('tenant')) {
+            $slug = strtolower((string) $request->query('tenant'));
+            if ($slug !== '') {
+                $tenant = Tenant::where('slug', '=', $slug, 'and')->where('is_active', '=', true, 'and')->first(['*']);
+                if ($tenant) {
+                    static::setActiveTenantContext($tenant);
+                    return $tenant;
+                }
             }
         }
 
-        // 2. URL Path Segment Resolution (e.g. /zenith-yoga/book or /zenith-yoga/admin)
-        $firstSegment = strtolower((string) $request->segment(1));
-        $excludedSegments = ['platform-admin', 'register-business', 'login', 'register', 'logout', 'parent', 'features', 'where-to-use', 'customers', 'platform-pricing', 'contact', 'demo', 'api', 'storage', 'build', 'images', 'uploads'];
-        if ($firstSegment && !in_array($firstSegment, $excludedSegments, true)) {
-            $tenant = Tenant::where('slug', '=', $firstSegment, 'and')->where('is_active', '=', true, 'and')->first(['*']);
-            if ($tenant) {
-                static::setActiveTenantContext($tenant);
-                return $tenant;
-            }
-        }
+        // 2. Subdomain & Custom Domain Resolution via Host Header
+        $host = strtolower($request->getHost());
+        $appUrl = config('app.url');
+        $appHost = strtolower(parse_url($appUrl, PHP_URL_HOST) ?? '');
 
-        // 3. Subdomain & Custom Domain Resolution (e.g. colombo.localhost or apex.appdomain.test)
-        $host = $request->getHost();
         if ($host && $host !== 'localhost' && $host !== '127.0.0.1') {
-            // Direct domain check
+            // Direct custom domain check (e.g. "booking.colombocourts.lk")
             $tenant = Tenant::where('domain', '=', $host, 'and')->where('is_active', '=', true, 'and')->first(['*']);
 
-            // Subdomain check (e.g. "colombo" from "colombo.localhost")
-            if (!$tenant) {
+            // Subdomain check (e.g. "colombo-courts-club" from "colombo-courts-club.lvh.me")
+            if (!$tenant && $host !== $appHost) {
                 $hostParts = explode('.', $host);
                 if (count($hostParts) >= 2 && $hostParts[0] !== 'www') {
-                    $subdomain = strtolower($hostParts[0]);
+                    $subdomain = $hostParts[0];
                     $tenant = Tenant::where('slug', '=', $subdomain, 'and')->where('is_active', '=', true, 'and')->first(['*']);
                 }
             }
@@ -57,15 +56,8 @@ class TenantResolver
             }
         }
 
-        // 4. Session Resolution
-        if (session()->has('tenant_id')) {
-            $tenant = Tenant::where('id', '=', session('tenant_id'), 'and')->where('is_active', '=', true, 'and')->first(['*']);
-            if ($tenant) {
-                static::setActiveTenantContext($tenant);
-                return $tenant;
-            }
-        }
-
+        // Clear context if no tenant resolved
+        static::clearTenantContext();
         return null;
     }
 
@@ -82,23 +74,37 @@ class TenantResolver
     }
 
     /**
-     * Generate clean path-based tenant URL (e.g. /apex-sports-arena/book)
+     * Generate canonical absolute subdomain-based URL for tenant routes.
+     * Supports both route names (e.g., 'admin.bookings') and relative paths (e.g., '/admin/bookings').
      */
-    public static function tenantUrl(string $path = '', ?Tenant $tenant = null): string
+    public static function tenantUrl(string $nameOrPath = '', array $params = [], ?Tenant $tenant = null): string
     {
         $activeTenant = $tenant ?? static::getActiveTenantModel();
         $slug = $activeTenant?->slug;
-        $path = ltrim($path, '/');
 
-        if ($slug) {
-            return url('/' . $slug . ($path ? '/' . $path : ''));
+        if ($nameOrPath !== '' && \Illuminate\Support\Facades\Route::has($nameOrPath)) {
+            $path = route($nameOrPath, $params, false);
+        } else {
+            $path = '/' . ltrim($nameOrPath, '/');
+            if (!empty($params)) {
+                $path .= '?' . http_build_query($params);
+            }
         }
 
-        return url('/' . $path);
+        $appUrl = config('app.url');
+        $scheme = parse_url($appUrl, PHP_URL_SCHEME) ?? 'http';
+        $host = parse_url($appUrl, PHP_URL_HOST) ?? 'lvh.me';
+        $port = parse_url($appUrl, PHP_URL_PORT);
+
+        $baseHost = $slug ? "{$slug}.{$host}" : $host;
+        $portStr = $port ? ":{$port}" : '';
+
+        return "{$scheme}://{$baseHost}{$portStr}" . $path;
     }
 
     /**
-     * Store resolved tenant into session, container singleton, and view scope.
+     * Store resolved tenant into container singleton and view scope.
+     * Session storing tenant_id is kept solely for authorization checks, not resolution.
      */
     public static function setActiveTenantContext(Tenant $tenant): void
     {
@@ -131,11 +137,7 @@ class TenantResolver
             return app('currentTenant');
         }
 
-        if (session()->has('tenant_id')) {
-            return Tenant::find(session('tenant_id'), ['*']);
-        }
-
-        return Tenant::first(['*']);
+        return null;
     }
 
     public static function getActiveTenant(): array

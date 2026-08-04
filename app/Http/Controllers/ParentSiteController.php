@@ -15,15 +15,14 @@ class ParentSiteController extends Controller
      */
     public function index(Request $request)
     {
-        // If a tenant context is resolved via query param or subdomain, delegate to Tenant Site home
-        if ($request->has('tenant')) {
-            $tenant = TenantResolver::resolve($request);
-            if ($tenant) {
-                return view('home', compact('tenant'));
-            }
+        // If a tenant context is resolved (via subdomain or local ?tenant= param), render Tenant Site home
+        $tenant = TenantResolver::getActiveTenantModel();
+        if ($tenant) {
+            return view('home', compact('tenant'));
         }
 
         // Clear tenant context for parent site
+        TenantResolver::clearTenantContext();
         TenantResolver::clearTenantContext();
 
         // Featured live tenants for showcase

@@ -39,18 +39,13 @@ class EnsureUserHasRole
 
         // Enforce Tenant Boundary Check for Tenant Staff
         $activeTenant = \App\Services\TenantResolver::getActiveTenantModel();
-        if ($user->tenant_id) {
+        if ($user->tenant_id && !$user->isSuperAdmin()) {
             if ($activeTenant && (int) $user->tenant_id !== (int) $activeTenant->id) {
-                // If user belongs to Tenant A but tries to access Tenant B explicitly
-                if ($request->has('tenant') && strtolower($request->query('tenant')) !== strtolower($user->tenant?->slug ?? '')) {
-                    abort(403, 'Cross-Tenant Access Denied: Your account does not have authorization to access ' . ($activeTenant->name ?? 'this facility') . '.');
-                }
-                
-                // Set correct tenant context for user's assigned tenant
-                if ($user->tenant) {
-                    \App\Services\TenantResolver::setActiveTenantContext($user->tenant);
-                    $activeTenant = $user->tenant;
-                }
+                abort(403, 'Cross-Tenant Access Denied: Your account belongs to ' . ($user->tenant?->name ?? 'a different facility') . ' and cannot access this domain.');
+            }
+
+            if (!$activeTenant && $user->tenant) {
+                \App\Services\TenantResolver::setActiveTenantContext($user->tenant);
             }
         }
 
