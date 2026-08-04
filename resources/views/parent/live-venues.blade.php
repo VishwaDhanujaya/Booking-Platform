@@ -28,7 +28,7 @@
 
             <!-- Category Filter Bar (Liquid Glass Style Filter Pills) -->
             <div class="flex flex-wrap items-center justify-center gap-2.5">
-                <a href="{{ route('parent.customers', ['category' => 'all']) }}"
+                <a href="{{ route('parent.live-venues', ['category' => 'all']) }}"
                    class="px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-xs {{ $selectedCategory === 'all' ? 'bg-slate-950 text-white font-black shadow-md border border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
                     All Venues ({{ \App\Models\Tenant::where('is_active', '=', true, 'and')->where('is_public', '=', true, 'and')->count(['*']) }})
                 </a>
@@ -38,7 +38,7 @@
                         @php
                             $catCount = \App\Models\Tenant::where('is_active', '=', true, 'and')->where('is_public', '=', true, 'and')->where('category', '=', $catKey, 'and')->count(['*']);
                         @endphp
-                        <a href="{{ route('parent.customers', ['category' => $catKey]) }}"
+                        <a href="{{ route('parent.live-venues', ['category' => $catKey]) }}"
                            class="px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-xs {{ $selectedCategory === $catKey ? 'bg-slate-950 text-white font-black shadow-md border border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}">
                             {{ $catLabel }} ({{ $catCount }})
                         </a>

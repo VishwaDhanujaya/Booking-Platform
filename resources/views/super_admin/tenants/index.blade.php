@@ -2,49 +2,44 @@
 
     <div class="space-y-8">
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <!-- CLEAN OPERATIONAL PAGE HEADER (No Marketing Subhero Canvas) -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
             <div class="space-y-1">
-                <div>
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-sltds-endeavour border border-sltds-sky/30 shadow-xs">
-                        Tenant Control
-                    </span>
-                </div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Tenant Directory & Management</h1>
-                <p class="text-xs text-slate-500">Manage every tenant subscription, toggle active status, set public directory visibility, or access tenant admin.</p>
+                <h1 class="text-3xl font-black text-slate-950 tracking-tight">Tenant Directory & Management</h1>
+                <p class="text-xs text-slate-500 font-medium">Manage every tenant subscription, toggle active status, set public directory visibility, or access tenant user accounts.</p>
             </div>
             
-            <a href="{{ route('superadmin.tenants.create') }}" class="inline-flex items-center px-4.5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-sltds-endeavour hover:bg-sltds-sky shadow-md shadow-sltds-endeavour/20 transition-all">
-                + Provision New Tenant
+            <a href="{{ route('superadmin.tenants.create') }}" class="inline-flex items-center px-5 py-2.5 rounded-full text-xs font-black text-white bg-slate-950 hover:bg-slate-800 transition-all shadow-md">
+                + Provision New Tenant &rarr;
             </a>
         </div>
 
-        <!-- Filter & Search Bar -->
-        <div class="bg-white border-2 border-slate-200/80 rounded-3xl p-5 shadow-xs">
+        <!-- FILTER & SEARCH BAR (Compact & Space Efficient) -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xl">
             <form action="{{ route('superadmin.tenants') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                 
                 <!-- Search Input -->
                 <div class="sm:col-span-6">
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Search tenant name, slug, or domain..."
-                           class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                           class="w-full px-4 py-2.5 rounded-full bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:bg-white focus:border-slate-950 transition-all font-medium">
                 </div>
 
                 <!-- Plan Filter -->
                 <div class="sm:col-span-3">
                     <select name="plan" onchange="this.form.submit()"
-                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
-                        <option value="all">All Plans</option>
-                        <option value="starter" {{ request('plan') === 'starter' ? 'selected' : '' }}>Starter Tier (LKR 15,000/mo)</option>
-                        <option value="pro" {{ request('plan') === 'pro' ? 'selected' : '' }}>Pro Tier (LKR 35,000/mo)</option>
-                        <option value="enterprise" {{ request('plan') === 'enterprise' ? 'selected' : '' }}>Enterprise Plan (LKR 75,000/mo)</option>
+                            class="w-full px-4 py-2.5 rounded-full bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-slate-950 transition-all font-bold">
+                        <option value="all">All SaaS Plans</option>
+                        <option value="starter" {{ request('plan') === 'starter' ? 'selected' : '' }}>Starter Tier ($49/mo)</option>
+                        <option value="pro" {{ request('plan') === 'pro' ? 'selected' : '' }}>Pro Tier ($99/mo)</option>
+                        <option value="enterprise" {{ request('plan') === 'enterprise' ? 'selected' : '' }}>Enterprise Plan</option>
                     </select>
                 </div>
 
                 <!-- Status Filter -->
                 <div class="sm:col-span-3">
                     <select name="status" onchange="this.form.submit()"
-                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-sltds-endeavour">
+                            class="w-full px-4 py-2.5 rounded-full bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:bg-white focus:border-slate-950 transition-all font-bold">
                         <option value="all">All Statuses</option>
                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                         <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
@@ -54,34 +49,34 @@
             </form>
         </div>
 
-        <!-- Tenant List Table -->
-        <div class="bg-white border-2 border-slate-200/80 rounded-3xl overflow-hidden shadow-sm">
+        <!-- HIGH-DENSITY OPERATIONAL TENANT TABLE -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-xl">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-950 text-white uppercase tracking-wider font-black text-[10px]">
                         <tr>
                             <th class="py-4 px-6">Tenant / Subdomain</th>
-                            <th class="py-4 px-4">Category Tag</th>
+                            <th class="py-4 px-4">Category</th>
                             <th class="py-4 px-4">Plan & Status</th>
                             <th class="py-4 px-4">Directory Visibility</th>
                             <th class="py-4 px-4">Courts / Bookings</th>
                             <th class="py-4 px-6 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
                         @forelse($tenants as $tenant)
                             <tr class="hover:bg-slate-50/80 transition-colors">
                                 
                                 <!-- Tenant Info -->
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-white text-base shadow-md" style="background-color: {{ $tenant->brand_color ?? '#0056A2' }}">
+                                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md shrink-0" style="background-color: {{ $tenant->brand_color ?? '#0056A2' }}">
                                             {{ strtoupper(substr($tenant->name, 0, 1)) }}
                                         </div>
                                         <div>
-                                            <div class="font-extrabold text-slate-900 text-sm">{{ $tenant->name }}</div>
-                                            <div class="text-[11px] text-sltds-endeavour font-mono font-medium">
-                                                {{ $tenant->domain ?? ($tenant->slug . '.localhost') }}
+                                            <div class="font-black text-slate-950 text-sm tracking-tight">{{ $tenant->name }}</div>
+                                            <div class="text-[10px] text-slate-500 font-mono font-medium">
+                                                {{ $tenant->domain ?? ($tenant->slug . '.' . parse_url(config('app.url'), PHP_URL_HOST)) }}
                                             </div>
                                         </div>
                                     </div>
@@ -89,7 +84,7 @@
 
                                 <!-- Category -->
                                 <td class="py-4 px-4">
-                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200">
                                         {{ $tenant->category }}
                                     </span>
                                 </td>
@@ -97,15 +92,15 @@
                                 <!-- Plan & Status -->
                                 <td class="py-4 px-4 space-y-1">
                                     <div>
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-50 text-sltds-endeavour border border-blue-200">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-950 text-white">
                                             {{ $tenant->subscription_plan }}
                                         </span>
                                     </div>
                                     <div>
                                         @if($tenant->is_active)
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-sltds-green border border-emerald-200">Active</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">Active</span>
                                         @else
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Suspended</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-50 text-rose-800 border border-rose-200">Suspended</span>
                                         @endif
                                     </div>
                                 </td>
@@ -115,12 +110,12 @@
                                     <form action="{{ route('superadmin.tenants.toggle-public', $tenant->id) }}" method="POST">
                                         @csrf
                                         @if($tenant->is_public)
-                                            <button type="submit" title="Click to hide from public directory" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-sltds-green border border-emerald-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors">
-                                                ✓ Public Directory
+                                            <button type="submit" title="Click to hide from public directory" class="px-3 py-1 rounded-full text-[9px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-rose-50 hover:text-rose-800 transition-colors cursor-pointer">
+                                                Public Directory
                                             </button>
                                         @else
-                                            <button type="submit" title="Click to publish to customer directory" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-sltds-green hover:border-emerald-200 transition-colors">
-                                                🔒 Private (Hidden)
+                                            <button type="submit" title="Click to publish to customer directory" class="px-3 py-1 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-800 transition-colors cursor-pointer">
+                                                Private (Hidden)
                                             </button>
                                         @endif
                                     </form>
@@ -128,20 +123,20 @@
 
                                 <!-- Counts -->
                                 <td class="py-4 px-4 text-xs font-medium">
-                                    <div class="font-bold text-slate-900">{{ $tenant->courts_count ?? 0 }} Courts</div>
+                                    <div class="font-black text-slate-950">{{ $tenant->courts_count ?? 0 }} Courts</div>
                                     <div class="text-slate-500 text-[10px]">{{ $tenant->bookings_count ?? 0 }} Total Bookings</div>
                                 </td>
 
                                 <!-- Actions -->
-                                <td class="py-4 px-6 text-right space-x-2">
+                                <td class="py-4 px-6 text-right space-x-1.5">
                                     
                                     <!-- Manage Users Link -->
-                                    <a href="{{ route('superadmin.tenants.users', $tenant->id) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all shadow-xs">
-                                        Manage Users &rarr;
+                                    <a href="{{ route('superadmin.tenants.users', $tenant->id) }}" class="px-3 py-1.5 rounded-full text-xs font-black text-slate-950 bg-slate-100 hover:bg-slate-200 transition-all">
+                                        Users &rarr;
                                     </a>
 
                                     <!-- Edit Link -->
-                                    <a href="{{ route('superadmin.tenants.edit', $tenant->id) }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors">
+                                    <a href="{{ route('superadmin.tenants.edit', $tenant->id) }}" class="px-3 py-1.5 rounded-full text-xs font-black text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
                                         Edit
                                     </a>
 
@@ -149,11 +144,11 @@
                                     <form action="{{ route('superadmin.tenants.toggle-status', $tenant->id) }}" method="POST" class="inline">
                                         @csrf
                                         @if($tenant->is_active)
-                                            <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors">
+                                            <button type="submit" class="px-3 py-1.5 rounded-full text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer">
                                                 Suspend
                                             </button>
                                         @else
-                                            <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-bold text-sltds-green bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors">
+                                            <button type="submit" class="px-3 py-1.5 rounded-full text-xs font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer">
                                                 Reactivate
                                             </button>
                                         @endif

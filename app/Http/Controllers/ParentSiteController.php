@@ -25,7 +25,7 @@ class ParentSiteController extends Controller
         TenantResolver::clearTenantContext();
         TenantResolver::clearTenantContext();
 
-        // Featured live tenants for showcase
+        // Featured live tenants for showcase (Max 4 companies)
         $featuredTenants = Tenant::where('is_active', '=', true, 'and')
             ->where('is_public', '=', true, 'and')
             ->limit(4)
@@ -51,18 +51,26 @@ class ParentSiteController extends Controller
     }
 
     /**
-     * Verticals & Use-Cases Page
+     * Solutions & Verticals Overview Page
      */
-    public function whereToUse()
+    public function solutions()
     {
         TenantResolver::clearTenantContext();
-        return view('parent.where-to-use');
+        return view('parent.solutions');
     }
 
     /**
-     * DB-Driven Live Customer Directory
+     * Alias for Solutions Page
      */
-    public function customers(Request $request)
+    public function whereToUse()
+    {
+        return $this->solutions();
+    }
+
+    /**
+     * DB-Driven Live Venues Directory
+     */
+    public function liveVenues(Request $request)
     {
         TenantResolver::clearTenantContext();
 
@@ -84,7 +92,15 @@ class ParentSiteController extends Controller
             'Creche' => 'Creche & Childcare',
         ];
 
-        return view('parent.customers', compact('tenants', 'categories', 'selectedCategory'));
+        return view('parent.live-venues', compact('tenants', 'categories', 'selectedCategory'));
+    }
+
+    /**
+     * Alias for Live Venues Directory
+     */
+    public function customers(Request $request)
+    {
+        return $this->liveVenues($request);
     }
 
     /**
